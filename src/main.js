@@ -818,8 +818,14 @@ class GameScene extends Phaser.Scene {
       strokeThickness: 3
     })
 
-    // Level display (prominent!)
-    this.levelText = this.add.text(180, 20, 'LEVEL 1', {
+    // Hearts/Strikes (5 lives!) - moved up to top right
+    this.heartsText = this.add.text(360, 20, '❤️❤️❤️❤️❤️', {
+      fontSize: '24px',
+      fontFamily: 'Arial'
+    }).setOrigin(1, 0)
+
+    // Level display (moved down to avoid overlap with score)
+    this.levelText = this.add.text(180, 130, 'LEVEL 1', {
       fontSize: '32px',
       fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
       color: '#00FF00',
@@ -827,20 +833,14 @@ class GameScene extends Phaser.Scene {
       strokeThickness: 5
     }).setOrigin(0.5, 0)
 
-    // Items on line counter
-    this.itemsOnLineText = this.add.text(180, 55, '0/5 on line', {
+    // Items on line counter (moved down with level)
+    this.itemsOnLineText = this.add.text(180, 165, '0/5 on line', {
       fontSize: '18px',
       fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
       color: '#FFFFFF',
       stroke: '#000000',
       strokeThickness: 3
     }).setOrigin(0.5, 0)
-
-    // Hearts/Strikes (5 lives!)
-    this.heartsText = this.add.text(360, 20, '❤️❤️❤️❤️❤️', {
-      fontSize: '24px',
-      fontFamily: 'Arial'
-    }).setOrigin(1, 0)
 
     // Combo display (initially hidden)
     this.comboText = this.add.text(180, 100, '', {
