@@ -2145,41 +2145,67 @@ class TitleScene extends Phaser.Scene {
   }
 
   create() {
-    // Sky gradient background
+    // Sky gradient background - deeper, more vibrant blue
     const sky = this.add.graphics()
     for (let i = 0; i < 740; i++) {
       const color = Phaser.Display.Color.Interpolate.ColorWithColor(
-        { r: 135, g: 206, b: 235 },
-        { r: 224, g: 246, b: 255 },
+        { r: 100, g: 180, b: 250 },
+        { r: 180, g: 230, b: 255 },
         740, i
       )
       sky.fillStyle(Phaser.Display.Color.GetColor(color.r, color.g, color.b), 1)
       sky.fillRect(0, i, 360, 1)
     }
 
-    // Sun
+    // Sun with 12 animated glow layers
     const sun = this.add.graphics()
-    for (let i = 0; i < 8; i++) {
-      sun.fillStyle(0xFFFF99, 0.05 - i * 0.005)
-      sun.fillCircle(300, 80, 40 + i * 5)
+    for (let i = 0; i < 12; i++) {
+      sun.fillStyle(0xFFFF99, 0.08 - i * 0.006)
+      sun.fillCircle(300, 80, 45 + i * 6)
     }
     sun.fillStyle(0xFFFFAA, 1)
-    sun.fillCircle(300, 80, 25)
-    sun.fillStyle(0xFFFFDD, 0.8)
-    sun.fillCircle(298, 78, 20)
+    sun.fillCircle(300, 80, 28)
+    sun.fillStyle(0xFFFFDD, 0.9)
+    sun.fillCircle(298, 77, 22)
+    sun.fillStyle(0xFFFFFF, 0.6)
+    sun.fillCircle(295, 74, 12)
 
-    // Animated clouds
+    // Animate sun glow
+    this.tweens.add({
+      targets: sun,
+      alpha: 0.85,
+      duration: 2000,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut'
+    })
+
+    // Animated clouds with soft opacity layers
     for (let i = 0; i < 3; i++) {
       const cloud = this.add.graphics()
       const startX = Phaser.Math.Between(-50, 360)
       const y = Phaser.Math.Between(60, 150)
 
-      cloud.fillStyle(0xFFFFFF, 0.7)
+      // Cloud shadow
+      cloud.fillStyle(0xCCCCCC, 0.3)
+      cloud.fillCircle(2, 2, 25)
+      cloud.fillCircle(22, -3, 20)
+      cloud.fillCircle(-18, -3, 20)
+      cloud.fillCircle(12, 7, 18)
+      cloud.fillCircle(-8, 7, 18)
+
+      // Main cloud
+      cloud.fillStyle(0xFFFFFF, 0.85)
       cloud.fillCircle(0, 0, 25)
       cloud.fillCircle(20, -5, 20)
       cloud.fillCircle(-20, -5, 20)
       cloud.fillCircle(10, 5, 18)
       cloud.fillCircle(-10, 5, 18)
+
+      // Cloud highlights
+      cloud.fillStyle(0xFFFFFF, 0.95)
+      cloud.fillCircle(-5, -8, 12)
+      cloud.fillCircle(15, -10, 10)
 
       cloud.x = startX
       cloud.y = y
@@ -2208,46 +2234,100 @@ class TitleScene extends Phaser.Scene {
       wall.fillRect(0, 200 + i, 360, 1)
     }
 
-    // Game Title with shadow
-    const titleShadow = this.add.text(180, 252, "UNCLE PAUL'S", {
-      fontSize: '42px',
-      fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
+    // TITLE LOGO - Professional 3D depth with multiple layers
+    // Deep shadow layer
+    const titleDeepShadow = this.add.text(180, 258, "UNCLE PAUL'S", {
+      fontSize: '48px',
+      fontFamily: 'Arial Black, Arial, Helvetica, sans-serif',
       color: '#000000',
       stroke: '#000000',
+      strokeThickness: 12,
+      fontStyle: 'bold'
+    }).setOrigin(0.5).setAlpha(0.4)
+
+    // Mid shadow layer
+    const titleMidShadow = this.add.text(180, 254, "UNCLE PAUL'S", {
+      fontSize: '48px',
+      fontFamily: 'Arial Black, Arial, Helvetica, sans-serif',
+      color: '#000000',
+      stroke: '#000000',
+      strokeThickness: 10,
+      fontStyle: 'bold'
+    }).setOrigin(0.5).setAlpha(0.6)
+
+    // Main title
+    const title = this.add.text(180, 250, "UNCLE PAUL'S", {
+      fontSize: '48px',
+      fontFamily: 'Arial Black, Arial, Helvetica, sans-serif',
+      color: '#FFD700',
+      stroke: '#FF8C00',
       strokeThickness: 8,
       fontStyle: 'bold'
     }).setOrigin(0.5)
 
-    const title = this.add.text(180, 250, "UNCLE PAUL'S", {
-      fontSize: '42px',
-      fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
-      color: '#FFD700',
-      stroke: '#FF6B00',
-      strokeThickness: 6,
+    // Inner highlight
+    const titleHighlight = this.add.text(180, 248, "UNCLE PAUL'S", {
+      fontSize: '48px',
+      fontFamily: 'Arial Black, Arial, Helvetica, sans-serif',
+      color: '#FFEB99',
+      stroke: '#FFE066',
+      strokeThickness: 2,
       fontStyle: 'bold'
-    }).setOrigin(0.5)
+    }).setOrigin(0.5).setAlpha(0.7)
 
-    const subtitleShadow = this.add.text(180, 302, 'POOLSIDE PANIC', {
-      fontSize: '36px',
-      fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
+    // SUBTITLE - Professional 3D depth
+    // Deep shadow layer
+    const subtitleDeepShadow = this.add.text(180, 308, 'POOLSIDE PANIC', {
+      fontSize: '42px',
+      fontFamily: 'Arial Black, Arial, Helvetica, sans-serif',
       color: '#000000',
       stroke: '#000000',
-      strokeThickness: 7,
+      strokeThickness: 12,
       fontStyle: 'bold'
-    }).setOrigin(0.5)
+    }).setOrigin(0.5).setAlpha(0.4)
 
+    // Mid shadow layer
+    const subtitleMidShadow = this.add.text(180, 304, 'POOLSIDE PANIC', {
+      fontSize: '42px',
+      fontFamily: 'Arial Black, Arial, Helvetica, sans-serif',
+      color: '#000000',
+      stroke: '#000000',
+      strokeThickness: 10,
+      fontStyle: 'bold'
+    }).setOrigin(0.5).setAlpha(0.6)
+
+    // Main subtitle
     const subtitle = this.add.text(180, 300, 'POOLSIDE PANIC', {
-      fontSize: '36px',
-      fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
-      color: '#00D4FF',
+      fontSize: '42px',
+      fontFamily: 'Arial Black, Arial, Helvetica, sans-serif',
+      color: '#00BFFF',
       stroke: '#0066CC',
-      strokeThickness: 5,
+      strokeThickness: 8,
       fontStyle: 'bold'
     }).setOrigin(0.5)
 
-    // Pulse animation on title
+    // Inner highlight
+    const subtitleHighlight = this.add.text(180, 298, 'POOLSIDE PANIC', {
+      fontSize: '42px',
+      fontFamily: 'Arial Black, Arial, Helvetica, sans-serif',
+      color: '#99E6FF',
+      stroke: '#66D4FF',
+      strokeThickness: 2,
+      fontStyle: 'bold'
+    }).setOrigin(0.5).setAlpha(0.7)
+
+    // Pulse animation on title and subtitle
     this.tweens.add({
-      targets: [title, subtitle],
+      targets: [titleDeepShadow, titleMidShadow, title, titleHighlight],
+      scale: 1.05,
+      duration: 1000,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut'
+    })
+
+    this.tweens.add({
+      targets: [subtitleDeepShadow, subtitleMidShadow, subtitle, subtitleHighlight],
       scale: 1.05,
       duration: 1000,
       yoyo: true,
@@ -2264,38 +2344,106 @@ class TitleScene extends Phaser.Scene {
       strokeThickness: 3
     }).setOrigin(0.5)
 
-    // High score display
+    // HIGH SCORE BANNER - Gold medal/banner style
     const highScore = parseInt(localStorage.getItem('unclePaulHighScore') || '0')
     if (highScore > 0) {
-      this.add.text(180, 410, `HIGH SCORE: ${highScore}`, {
-        fontSize: '24px',
-        fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
-        color: '#FFD700',
-        stroke: '#000000',
-        strokeThickness: 4
+      const bannerY = 410
+
+      // Banner shadow
+      const bannerShadow = this.add.graphics()
+      bannerShadow.fillStyle(0x000000, 0.3)
+      bannerShadow.fillRoundedRect(55, bannerY + 5, 250, 50, 10)
+
+      // Banner background - gold gradient effect
+      const banner = this.add.graphics()
+      banner.fillStyle(0xFFD700, 1)
+      banner.fillRoundedRect(50, bannerY, 250, 50, 10)
+
+      // Gold highlight strip on top
+      banner.fillStyle(0xFFE87C, 1)
+      banner.fillRoundedRect(50, bannerY, 250, 15, 10)
+
+      // Gold border
+      banner.lineStyle(4, 0xB8860B, 1)
+      banner.strokeRoundedRect(50, bannerY, 250, 50, 10)
+
+      // Banner text shadow
+      this.add.text(180, bannerY + 27, `HIGH SCORE: ${highScore}`, {
+        fontSize: '22px',
+        fontFamily: 'Arial Black, Arial, Helvetica, sans-serif',
+        color: '#000000',
+        fontStyle: 'bold'
+      }).setOrigin(0.5).setAlpha(0.4)
+
+      // Banner text
+      const bannerText = this.add.text(180, bannerY + 25, `HIGH SCORE: ${highScore}`, {
+        fontSize: '22px',
+        fontFamily: 'Arial Black, Arial, Helvetica, sans-serif',
+        color: '#8B4513',
+        fontStyle: 'bold'
       }).setOrigin(0.5)
+
+      // Subtle pulse animation on banner
+      this.tweens.add({
+        targets: [banner, bannerText],
+        scale: 1.03,
+        duration: 1500,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut'
+      })
     }
 
-    // Play button
+    // PLAY BUTTON - Professional 3D button
+    const buttonY = 480
     const button = this.add.graphics()
-    button.fillStyle(0x4CAF50, 1)
-    button.fillRoundedRect(80, 480, 200, 70, 15)
-    button.lineStyle(5, 0x45A049, 1)
-    button.strokeRoundedRect(80, 480, 200, 70, 15)
 
-    const buttonText = this.add.text(180, 515, '▶ PLAY NOW!', {
-      fontSize: '32px',
-      fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
+    // Deep shadow layer
+    button.fillStyle(0x000000, 0.3)
+    button.fillRoundedRect(80, buttonY + 5, 200, 70, 15)
+
+    // Dark base layer (3D depth)
+    button.fillStyle(0x2E7D32, 1)
+    button.fillRoundedRect(80, buttonY - 35, 200, 70, 15)
+
+    // Button face
+    button.fillStyle(0x4CAF50, 1)
+    button.fillRoundedRect(80, buttonY - 38, 200, 70, 15)
+
+    // Highlight strip on top (3D effect)
+    button.fillStyle(0x66BB6A, 1)
+    button.fillRoundedRect(80, buttonY - 38, 200, 25, 15)
+
+    // Gloss highlight
+    button.fillStyle(0xFFFFFF, 0.2)
+    button.fillRoundedRect(85, buttonY - 35, 190, 15, 12)
+
+    // Button border
+    button.lineStyle(5, 0x1B5E20, 1)
+    button.strokeRoundedRect(80, buttonY - 38, 200, 70, 15)
+
+    // Button text shadow
+    const buttonTextShadow = this.add.text(180, 515 - 35, 'PLAY NOW!', {
+      fontSize: '36px',
+      fontFamily: 'Arial Black, Arial, Helvetica, sans-serif',
+      color: '#000000',
+      fontStyle: 'bold'
+    }).setOrigin(0.5).setAlpha(0.4)
+
+    // Button text
+    const buttonText = this.add.text(180, 515 - 38, 'PLAY NOW!', {
+      fontSize: '36px',
+      fontFamily: 'Arial Black, Arial, Helvetica, sans-serif',
       color: '#FFFFFF',
-      stroke: '#000000',
-      strokeThickness: 5,
+      stroke: '#2E7D32',
+      strokeThickness: 4,
       fontStyle: 'bold'
     }).setOrigin(0.5)
 
     // Bounce animation on button
     this.tweens.add({
-      targets: [button, buttonText],
-      y: '+=5',
+      targets: [button, buttonText, buttonTextShadow],
+      y: '+=8',
       duration: 800,
       yoyo: true,
       repeat: -1,
@@ -2303,13 +2451,25 @@ class TitleScene extends Phaser.Scene {
     })
 
     // Make button interactive
-    const buttonZone = this.add.zone(180, 515, 200, 70)
+    const buttonZone = this.add.zone(180, 515 - 38, 200, 70)
     buttonZone.setInteractive({ useHandCursor: true })
 
     buttonZone.on('pointerdown', () => {
+      // Pressed state - button goes down
       button.clear()
+
+      // Shadow disappears when pressed
+      button.fillStyle(0x2E7D32, 1)
+      button.fillRoundedRect(80, buttonY - 32, 200, 70, 15)
+
       button.fillStyle(0x45A049, 1)
-      button.fillRoundedRect(80, 480, 200, 70, 15)
+      button.fillRoundedRect(80, buttonY - 33, 200, 70, 15)
+
+      button.lineStyle(5, 0x1B5E20, 1)
+      button.strokeRoundedRect(80, buttonY - 33, 200, 70, 15)
+
+      buttonText.y = 515 - 33
+      buttonTextShadow.y = 515 - 33
     })
 
     buttonZone.on('pointerup', () => {
@@ -2317,17 +2477,19 @@ class TitleScene extends Phaser.Scene {
     })
 
     buttonZone.on('pointerover', () => {
-      buttonText.setScale(1.1)
-      button.setAlpha(0.9)
+      buttonText.setScale(1.08)
+      buttonTextShadow.setScale(1.08)
+      button.setAlpha(0.95)
     })
 
     buttonZone.on('pointerout', () => {
       buttonText.setScale(1)
+      buttonTextShadow.setScale(1)
       button.setAlpha(1)
     })
 
     // Credits at bottom
-    this.add.text(180, 680, 'Made with ❤️ for Uncle Paul', {
+    this.add.text(180, 680, 'Made with love for Uncle Paul', {
       fontSize: '14px',
       fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
       color: '#AAAAAA',
