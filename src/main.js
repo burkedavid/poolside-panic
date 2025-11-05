@@ -1808,7 +1808,8 @@ class GameScene extends Phaser.Scene {
           score: this.score,
           maxCombo: this.maxCombo,
           perfectThrows: this.perfectThrows,
-          totalThrows: this.totalThrows
+          totalThrows: this.totalThrows,
+          successfulHangs: this.successfulHangs
         })
       })
     }
@@ -2346,22 +2347,23 @@ class GameOverScene extends Phaser.Scene {
     this.maxCombo = data.maxCombo || 0
     this.perfectThrows = data.perfectThrows || 0
     this.totalThrows = data.totalThrows || 0
+    this.successfulHangs = data.successfulHangs || 0
     this.highScore = parseInt(localStorage.getItem('unclePaulHighScore') || '0')
   }
 
   create() {
     // Semi-transparent overlay
     const overlay = this.add.graphics()
-    overlay.fillStyle(0x000000, 0.8)
+    overlay.fillStyle(0x000000, 0.85)
     overlay.fillRect(0, 0, 360, 740)
 
     // Game Over text with animation
-    const gameOverText = this.add.text(180, 150, 'GAME OVER!', {
-      fontSize: '52px',
+    const gameOverText = this.add.text(180, 120, 'GAME OVER!', {
+      fontSize: '56px',
       fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
       color: '#FF0000',
       stroke: '#000000',
-      strokeThickness: 6
+      strokeThickness: 7
     }).setOrigin(0.5).setAlpha(0)
 
     this.tweens.add({
@@ -2374,18 +2376,26 @@ class GameOverScene extends Phaser.Scene {
     })
 
     // Final score (larger, more prominent)
-    this.add.text(180, 220, `Score: ${this.finalScore}`, {
-      fontSize: '40px',
+    this.add.text(180, 200, `SCORE`, {
+      fontSize: '22px',
+      fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
+      color: '#AAAAAA',
+      stroke: '#000000',
+      strokeThickness: 3
+    }).setOrigin(0.5)
+
+    this.add.text(180, 235, `${this.finalScore}`, {
+      fontSize: '48px',
       fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
       color: '#FFD700',
       stroke: '#000000',
-      strokeThickness: 5
+      strokeThickness: 6
     }).setOrigin(0.5)
 
     // New high score indicator
     if (this.finalScore >= this.highScore && this.finalScore > 0) {
-      const newBestText = this.add.text(180, 265, '🎉 NEW BEST! 🎉', {
-        fontSize: '24px',
+      const newBestText = this.add.text(180, 285, '🎉 NEW BEST! 🎉', {
+        fontSize: '26px',
         fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
         color: '#00FF00',
         stroke: '#000000',
@@ -2394,19 +2404,19 @@ class GameOverScene extends Phaser.Scene {
 
       this.tweens.add({
         targets: newBestText,
-        scale: 1.1,
+        scale: 1.15,
         duration: 500,
         yoyo: true,
         repeat: -1
       })
     }
 
-    // Stats panel
-    const statsY = 310
-    const lineHeight = 35
+    // Stats panel with better spacing
+    const statsY = this.finalScore >= this.highScore && this.finalScore > 0 ? 330 : 305
+    const lineHeight = 40
 
-    this.add.text(180, statsY, 'STATS', {
-      fontSize: '24px',
+    this.add.text(180, statsY, '━━━ STATS ━━━', {
+      fontSize: '26px',
       fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
       color: '#FFFFFF',
       stroke: '#000000',
@@ -2414,32 +2424,42 @@ class GameOverScene extends Phaser.Scene {
     }).setOrigin(0.5)
 
     this.add.text(180, statsY + lineHeight, `Best Combo: ${this.maxCombo}`, {
-      fontSize: '20px',
+      fontSize: '22px',
       fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
-      color: '#FF69B4'
+      color: '#FF69B4',
+      stroke: '#000000',
+      strokeThickness: 3
     }).setOrigin(0.5)
 
     this.add.text(180, statsY + lineHeight * 2, `Perfect Throws: ${this.perfectThrows}`, {
-      fontSize: '20px',
+      fontSize: '22px',
       fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
-      color: '#FFD700'
+      color: '#FFD700',
+      stroke: '#000000',
+      strokeThickness: 3
     }).setOrigin(0.5)
 
-    const accuracy = this.totalThrows > 0 ? Math.round((this.finalScore / this.totalThrows) * 100) : 0
+    // FIX: Calculate accuracy correctly using successfulHangs / totalThrows
+    const accuracy = this.totalThrows > 0 ? Math.round((this.successfulHangs / this.totalThrows) * 100) : 0
     this.add.text(180, statsY + lineHeight * 3, `Accuracy: ${accuracy}%`, {
+      fontSize: '22px',
+      fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
+      color: '#00FF00',
+      stroke: '#000000',
+      strokeThickness: 3
+    }).setOrigin(0.5)
+
+    this.add.text(180, statsY + lineHeight * 4, `All-Time Best: ${this.highScore}`, {
       fontSize: '20px',
       fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
-      color: '#00FF00'
+      color: '#AAAAAA',
+      stroke: '#000000',
+      strokeThickness: 2
     }).setOrigin(0.5)
 
-    this.add.text(180, statsY + lineHeight * 4, `High Score: ${this.highScore}`, {
-      fontSize: '18px',
-      fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
-      color: '#AAAAAA'
-    }).setOrigin(0.5)
-
-    // Uncle Paul says
-    this.add.text(180, 360, 'Uncle Paul says:', {
+    // Uncle Paul says (better positioned)
+    const messageY = statsY + lineHeight * 5 + 20
+    this.add.text(180, messageY, 'Uncle Paul says:', {
       fontSize: '20px',
       fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
       color: '#FFFFFF',
@@ -2456,39 +2476,42 @@ class GameOverScene extends Phaser.Scene {
     ]
 
     const message = Phaser.Utils.Array.GetRandom(messages)
-    this.add.text(180, 400, message, {
-      fontSize: '18px',
+    this.add.text(180, messageY + 35, message, {
+      fontSize: '19px',
       fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
       color: '#FFD700',
       stroke: '#000000',
       strokeThickness: 3,
       align: 'center',
-      wordWrap: { width: 300 }
+      wordWrap: { width: 320 }
     }).setOrigin(0.5)
 
-    // Play Again button
+    // Play Again button (better positioned)
+    const buttonY = 650
     const button = this.add.graphics()
     button.fillStyle(0x4CAF50, 1)
-    button.fillRoundedRect(105, 480, 150, 60, 10)
-    button.lineStyle(4, 0x2E7D32, 1)
-    button.strokeRoundedRect(105, 480, 150, 60, 10)
+    button.fillRoundedRect(90, buttonY - 35, 180, 70, 12)
+    button.lineStyle(5, 0x2E7D32, 1)
+    button.strokeRoundedRect(90, buttonY - 35, 180, 70, 12)
 
-    const buttonText = this.add.text(180, 510, 'PLAY AGAIN', {
-      fontSize: '24px',
+    const buttonText = this.add.text(180, buttonY, 'PLAY AGAIN', {
+      fontSize: '28px',
       fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
       color: '#FFFFFF',
       stroke: '#000000',
-      strokeThickness: 4
+      strokeThickness: 5
     }).setOrigin(0.5)
 
     // Make button interactive
-    const buttonZone = this.add.zone(180, 510, 150, 60)
+    const buttonZone = this.add.zone(180, buttonY, 180, 70)
     buttonZone.setInteractive({ useHandCursor: true })
 
     buttonZone.on('pointerdown', () => {
       button.clear()
       button.fillStyle(0x45A049, 1)
-      button.fillRoundedRect(105, 480, 150, 60, 10)
+      button.fillRoundedRect(90, buttonY - 35, 180, 70, 12)
+      button.lineStyle(5, 0x2E7D32, 1)
+      button.strokeRoundedRect(90, buttonY - 35, 180, 70, 12)
     })
 
     buttonZone.on('pointerup', () => {
