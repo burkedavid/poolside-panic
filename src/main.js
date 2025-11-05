@@ -67,22 +67,27 @@ class GameScene extends Phaser.Scene {
   }
 
   startDynamicWind() {
-    // Wind oscillates naturally like real weather
+    // Wind oscillates naturally like real weather - ALWAYS has a sweet spot!
     this.time.addEvent({
       delay: 100,
       callback: () => {
-        // Wind intensity oscillates between 0.2 and 1.0
-        this.windIntensity = 0.6 + Math.sin(this.time.now / 2000) * 0.4
+        // Wind intensity oscillates smoothly between 0.15 and 0.95
+        // Slower oscillation (3000ms) gives players time to wait for sweet spot
+        this.windIntensity = 0.55 + Math.sin(this.time.now / 3000) * 0.4
 
-        // Occasionally change wind direction (random gusts)
-        if (Phaser.Math.Between(0, 200) === 0) {
+        // Occasionally change wind direction (less frequent for fairness)
+        if (Phaser.Math.Between(0, 300) === 0) {
           this.windDirection = -this.windDirection
           this.showWindGust()
         }
 
-        // Calculate current wind speed based on intensity
-        const baseWind = 5 + Math.floor(this.successfulHangs / 3)
-        this.windSpeed = baseWind + (this.windIntensity * 15)
+        // Calculate current wind speed based on intensity and progression
+        // Starts easier, gradually gets harder but ALWAYS has low wind moments
+        const progressionWind = Math.floor(this.successfulHangs / 5) * 2
+        const baseWind = 3 + progressionWind // Starts at 3, increases by 2 every 5 hangs
+        const maxAdditionalWind = 12 + progressionWind // Scales with progression
+
+        this.windSpeed = baseWind + (this.windIntensity * maxAdditionalWind)
 
         this.updateWindDisplay()
       },
@@ -828,8 +833,8 @@ class GameScene extends Phaser.Scene {
     line.lineStyle(4, 0x696969, 1)
     line.lineBetween(55, 280, 310, 280)
 
-    // Create collision zone for the washing line (bigger zone for achievable gameplay)
-    this.washingLineZone = this.add.zone(180, 280, 240, 50)
+    // Create collision zone for the washing line (generous zone for fun gameplay!)
+    this.washingLineZone = this.add.zone(180, 280, 260, 80)
     this.physics.add.existing(this.washingLineZone, true)
 
     // Pegs on the line
@@ -1011,9 +1016,9 @@ class GameScene extends Phaser.Scene {
     const flickDistanceY = this.flickStartY - pointer.y
     const flickDistanceX = pointer.x - this.flickStartX
 
-    // Flick must be upward and reasonably fast
+    // More forgiving flick detection - easier to trigger
     const flickSpeed = flickDistanceY / Math.max(flickTime, 1)
-    const isValidFlick = flickDistanceY > 30 && flickSpeed > 0.05
+    const isValidFlick = flickDistanceY > 20 && flickSpeed > 0.03
 
     if (isValidFlick) {
       // Calculate angle based on horizontal movement during flick
@@ -1154,21 +1159,48 @@ class GameScene extends Phaser.Scene {
 
     // Advanced physics based on flick gesture and wind
     const powerFactor = this.power / 100
-    const flickBonus = flickSpeed * 200 // Flick speed adds significant velocity
+    const flickBonus = flickSpeed * 180 // Slightly reduced for better control
 
     // Base velocity from power and flick
-    const baseVelocityX = (powerFactor * 250) + (Math.cos(flickAngle) * flickBonus)
-    const baseVelocityY = -(powerFactor * 500) - (Math.sin(flickAngle) * flickBonus) - 200
+    const baseVelocityX = (powerFactor * 200) + (Math.cos(flickAngle) * flickBonus)
+    const baseVelocityY = -(powerFactor * 450) - (Math.sin(flickAngle) * flickBonus) - 180
 
-    // Wind effect is now dynamic and stronger
-    const windEffect = this.windSpeed * this.windDirection * 10
+    // Over-flicking physics - too much power makes it fly way up and spin down!
+    let verticalMultiplier = 1
+    let spinMultiplier = 1
+    if (flickSpeed > 0.25) {
+      // OVER-FLICKED! Goes flying way up and spins wildly
+      verticalMultiplier = 1.5 + (flickSpeed - 0.25) * 3
+      spinMultiplier = 2 + (flickSpeed - 0.25) * 4
+
+      // Hilarious visual feedback
+      const overFlickText = this.add.text(laundry.x, laundry.y - 60, 'WOAH!!! 🚀', {
+        fontSize: '28px',
+        fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
+        color: '#FF4444',
+        stroke: '#000000',
+        strokeThickness: 4
+      }).setOrigin(0.5).setDepth(10)
+
+      this.tweens.add({
+        targets: overFlickText,
+        y: laundry.y - 100,
+        alpha: 0,
+        duration: 1000,
+        ease: 'Cubic.easeOut',
+        onComplete: () => overFlickText.destroy()
+      })
+    }
+
+    // Wind effect - balanced for skill
+    const windEffect = this.windSpeed * this.windDirection * 7
 
     const velocityX = baseVelocityX + windEffect
-    const velocityY = baseVelocityY
+    const velocityY = baseVelocityY * verticalMultiplier
 
     laundry.body.setVelocity(velocityX, velocityY)
-    laundry.body.setAngularVelocity(Phaser.Math.Between(100, 250) * (flickSpeed + 0.5))
-    laundry.body.setDrag(12, 6)
+    laundry.body.setAngularVelocity(Phaser.Math.Between(100, 250) * (flickSpeed + 0.5) * spinMultiplier)
+    laundry.body.setDrag(10, 5)
 
     this.laundryInFlight = laundry
     this.totalThrows++
@@ -1840,22 +1872,127 @@ class GameScene extends Phaser.Scene {
   }
 
   celebrateUnclePaul() {
+    // JUMP FOR JOY! Multiple bounces
     this.tweens.add({
       targets: this.unclePaul,
-      y: 420,
-      duration: 100,
+      y: 380,
+      duration: 200,
+      ease: 'Cubic.easeOut',
       yoyo: true,
-      repeat: 2
+      repeat: 3,
+      onComplete: () => {
+        // Return to idle position
+        this.tweens.add({
+          targets: this.unclePaul,
+          y: 430,
+          duration: 300,
+          ease: 'Bounce.easeOut'
+        })
+      }
     })
+
+    // Add rotation during jump
+    this.tweens.add({
+      targets: this.unclePaul,
+      angle: -8,
+      duration: 200,
+      yoyo: true,
+      repeat: 3,
+      ease: 'Sine.easeInOut'
+    })
+
+    // Scale slightly bigger (excitement!)
+    this.tweens.add({
+      targets: this.unclePaul,
+      scaleX: 1.08,
+      scaleY: 1.08,
+      duration: 150,
+      yoyo: true,
+      repeat: 3
+    })
+
+    // Confetti particles around Uncle Paul
+    for (let i = 0; i < 12; i++) {
+      const confetti = this.add.graphics()
+      const colors = [0xFFD700, 0xFF69B4, 0x00D4FF, 0x00FF00, 0xFF6B00]
+      confetti.fillStyle(Phaser.Utils.Array.GetRandom(colors), 1)
+      confetti.fillRect(0, 0, 4, 8)
+      confetti.x = this.unclePaul.x + Phaser.Math.Between(-20, 20)
+      confetti.y = this.unclePaul.y - 30
+      confetti.setDepth(8)
+
+      const angle = (i / 12) * Math.PI * 2
+      this.tweens.add({
+        targets: confetti,
+        x: confetti.x + Math.cos(angle) * 50,
+        y: confetti.y + Math.sin(angle) * 50 + 80,
+        rotation: Math.PI * 4,
+        alpha: 0,
+        duration: 1000,
+        ease: 'Cubic.easeOut',
+        onComplete: () => confetti.destroy()
+      })
+    }
   }
 
   sadUnclePaul() {
+    // HANDS ON HEAD reaction!
+    // Make him lean back in despair
     this.tweens.add({
       targets: this.unclePaul,
-      angle: -5,
-      duration: 100,
+      angle: -10,
+      duration: 300,
+      ease: 'Back.easeOut',
       yoyo: true,
-      repeat: 3
+      onComplete: () => {
+        // Shake head side to side
+        this.tweens.add({
+          targets: this.unclePaul,
+          angle: 3,
+          duration: 150,
+          yoyo: true,
+          repeat: 4,
+          ease: 'Sine.easeInOut'
+        })
+      }
+    })
+
+    // Slight squat (hands on head posture)
+    this.tweens.add({
+      targets: this.unclePaul,
+      y: 435,
+      scaleY: 0.95,
+      duration: 300,
+      ease: 'Cubic.easeOut',
+      yoyo: true
+    })
+
+    // Show "NO!" text bubble
+    const sadText = this.add.text(this.unclePaul.x, this.unclePaul.y - 120, 'OH NO! 😱', {
+      fontSize: '24px',
+      fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
+      color: '#FF0000',
+      stroke: '#000000',
+      strokeThickness: 4,
+      backgroundColor: '#FFFFFF',
+      padding: { x: 10, y: 5 }
+    }).setOrigin(0.5).setAlpha(0).setDepth(10)
+
+    this.tweens.add({
+      targets: sadText,
+      alpha: 1,
+      y: this.unclePaul.y - 140,
+      duration: 300,
+      ease: 'Back.easeOut',
+      onComplete: () => {
+        this.tweens.add({
+          targets: sadText,
+          alpha: 0,
+          duration: 400,
+          delay: 600,
+          onComplete: () => sadText.destroy()
+        })
+      }
     })
   }
 
