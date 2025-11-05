@@ -9,7 +9,7 @@ class GameScene extends Phaser.Scene {
   create() {
     // Game state
     this.score = 0
-    this.strikes = 3
+    this.strikes = 5 // Generous! Players get 5 hearts
     this.level = 1 // Level system!
     this.itemsOnLine = 0 // Track items on washing line
     this.maxItemsPerLevel = 5 // Items needed to level up
@@ -928,9 +928,9 @@ class GameScene extends Phaser.Scene {
       strokeThickness: 3
     }).setOrigin(0.5, 0)
 
-    // Hearts/Strikes
-    this.heartsText = this.add.text(360, 20, '❤️❤️❤️', {
-      fontSize: '28px',
+    // Hearts/Strikes (5 lives!)
+    this.heartsText = this.add.text(360, 20, '❤️❤️❤️❤️❤️', {
+      fontSize: '24px',
       fontFamily: 'Arial'
     }).setOrigin(1, 0)
 
