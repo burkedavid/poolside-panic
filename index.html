@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Uncle Paul's Poolside Panic</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            overflow: hidden;
+            touch-action: none;
+            background-color: #87CEEB;
+            font-family: 'Arial', sans-serif;
+        }
+
+        #game-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        canvas {
+            display: block;
+            max-width: 100%;
+            max-height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container"></div>
+
+    <!-- Phaser 3 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
+
+    <script>
+        // ============================================
+        // GAME CONFIGURATION
+        // ============================================
+        const config = {
+            type: Phaser.AUTO,
+            width: 360,
+            height: 740,
+            parent: 'game-container',
+            backgroundColor: '#87CEEB',
+            physics: {
+                default: 'arcade',
+                arcade: {
+                    gravity: { y: 800 },
+                    debug: false
+                }
+            },
+            scale: {
+                mode: Phaser.Scale.FIT,
+                autoCenter: Phaser.Scale.CENTER_BOTH
+            },
+            scene: [MenuScene, GameScene, GameOverScene]
+        };
+
+        const game = new Phaser.Game(config);
+
+        // ============================================
+        // MENU SCENE
+        // ============================================
+        function MenuScene() {
+            Phaser.Scene.call(this, { key: 'MenuScene' });
+        }
+
+        MenuScene.prototype = Object.create(Phaser.Scene.prototype);
+        MenuScene.prototype.constructor = MenuScene;
+
+        MenuScene.prototype.create = function() {
+            const centerX = this.cameras.main.centerX;
+            const centerY = this.cameras.main.centerY;
+
+            // Title
+            this.add.text(centerX, centerY - 150, "Uncle Paul's\nPoolside Panic", {
+                fontSize: '42px',
+                fontFamily: 'Arial',
+                fontStyle: 'bold',
+                color: '#FFD700',
+                stroke: '#FF6B35',
+                strokeThickness: 6,
+                align: 'center'
+            }).setOrigin(0.5);
+
+            // Instructions
+            this.add.text(centerX, centerY + 20,
+                "Hang the laundry on the line!\n\nTap & hold to charge power\nRelease to throw\n\nDon't let 3 items fall\ninto the pool!", {
+                fontSize: '18px',
+                color: '#fff',
+                stroke: '#000',
+                strokeThickness: 3,
+                align: 'center'
+            }).setOrigin(0.5);
+
+            // Play button
+            const playButton = this.add.rectangle(centerX, centerY + 200, 200, 60, 0xFF6B35);
+            playButton.setInteractive({ useHandCursor: true });
+
+            const playText = this.add.text(centerX, centerY + 200, 'PLAY', {
+                fontSize: '32px',
+                fontFamily: 'Arial',
+                fontStyle: 'bold',
+                color: '#fff'
+            }).setOrigin(0.5);
+
+            playButton.on('pointerdown', () => {
+                this.scene.start('GameScene');
+            });
+
+            // Button hover effect
+            playButton.on('pointerover', () => {
+                playButton.setFillStyle(0xFF8C5A);
+            });
+
+            playButton.on('pointerout', () => {
+                playButton.setFillStyle(0xFF6B35);
+            });
+        };
+
+        // ============================================
+        // GAME SCENE
+        // ============================================
+        function GameScene() {
+            Phaser.Scene.call(this, { key: 'GameScene' });
+
+            // Game state
+            this.score = 0;
+            this.strikes = 3;
+            this.windSpeed = 10;
+            this.windDirection = 1; // 1 = right, -1 = left
+            this.successfulHangs = 0;
+
+            // Power meter
+            this.isPowerCharging = false;
+            this.powerLevel = 0;
+            this.powerChargeSpeed = 1.5;
+
+            // Laundry item state
+            this.currentItem = null;
+            this.isItemFlying = false;
+        }
+
+        GameScene.prototype = Object.create(Phaser.Scene.prototype);
+        GameScene.prototype.constructor = GameScene;
+
+        GameScene.prototype.create = function() {
+            const width = this.cameras.main.width;
+            const height = this.cameras.main.height;
+
+            // Background (sky gradient)
+            const sky = this.add.graphics();
+            sky.fillGradientStyle(0x87CEEB, 0x87CEEB, 0xE0F6FF, 0xE0F6FF, 1);
+            sky.fillRect(0, 0, width, height);
+
+            // Sun
+            const sun = this.add.circle(300, 80, 30, 0xFFFF00);
+            sun.setStrokeStyle(3, 0xFFD700);
+
+            // Clouds
+            this.drawCloud(60, 70);
+            this.drawCloud(280, 100);
+
+            // Villa wall (yellow with texture)
+            const wall = this.add.graphics();
+            wall.fillStyle(0xFFE082, 1);
+            wall.fillRect(0, 100, width, 180);
+            // Wall highlight
+            wall.fillStyle(0xFFEDAD, 1);
+            wall.fillRect(0, 100, width, 20);
+            // Wall shadow
+            wall.fillStyle(0xE6C960, 1);
+            wall.fillRect(0, 260, width, 20);
+
+            // Red roof tiles
+            const roof = this.add.graphics();
+            roof.fillStyle(0xD2691E, 1);
+            roof.fillTriangle(0, 100, width / 2, 50, width, 100);
+            roof.lineStyle(3, 0x8B4513, 1);
+            for (let i = 0; i < 8; i++) {
+                roof.lineBetween(50 + i * 40, 80 - i * 6, 50 + i * 40, 100);
+            }
+
+            // Windows
+            this.drawWindow(80, 140);
+            this.drawWindow(240, 140);
+
+            // Washing line posts (wooden poles)
+            this.drawWashingPost(30, 200);
+            this.drawWashingPost(width - 30, 200);
+
+            // Washing line (rope with segments)
+            this.washingLine = this.add.rectangle(width / 2, 200, width - 60, 6, 0xD2B48C);
+            this.washingLine.setStrokeStyle(2, 0x8B7355);
+
+            // Ground/patio (terracotta tiles)
+            const ground = this.add.graphics();
+            ground.fillStyle(0xE07B53, 1);
+            ground.fillRect(0, 280, width, height - 280);
+            // Tile lines
+            ground.lineStyle(2, 0xC86C47, 0.5);
+            for (let i = 0; i < 10; i++) {
+                ground.lineBetween(0, 280 + i * 50, width, 280 + i * 50);
+                ground.lineBetween(i * 50, 280, i * 50, height);
+            }
+
+            // Pool (with gradient water effect)
+            this.drawPool(width / 2, height - 120);
+
+            // Laundry basket (wicker style)
+            this.drawBasket(60, height - 80);
+
+            // Uncle Paul (cartoon character)
+            this.unclePaul = this.drawUnclePaul(width - 70, height - 80);
+
+            // UI Elements
+            this.createUI();
+
+            // Input handling
+            this.input.on('pointerdown', this.onPointerDown, this);
+            this.input.on('pointerup', this.onPointerUp, this);
+
+            // Initialize wind
+            this.randomizeWind();
+
+            // Create first laundry item
+            this.createLaundryItem();
+        };
+
+        // Helper function to draw a cloud
+        GameScene.prototype.drawCloud = function(x, y) {
+            const cloud = this.add.container(x, y);
+            const circles = [
+                this.add.circle(0, 0, 20, 0xFFFFFF, 0.9),
+                this.add.circle(-15, 5, 15, 0xFFFFFF, 0.9),
+                this.add.circle(15, 5, 15, 0xFFFFFF, 0.9),
+                this.add.circle(-8, -8, 12, 0xFFFFFF, 0.9),
+                this.add.circle(8, -8, 12, 0xFFFFFF, 0.9)
+            ];
+            cloud.add(circles);
+            return cloud;
+        };
+
+        // Helper function to draw a window
+        GameScene.prototype.drawWindow = function(x, y) {
+            const window = this.add.graphics();
+            // Window frame
+            window.fillStyle(0x8B4513, 1);
+            window.fillRect(x - 2, y - 2, 44, 44);
+            // Glass
+            window.fillStyle(0x87CEEB, 0.6);
+            window.fillRect(x, y, 40, 40);
+            // Reflection
+            window.fillStyle(0xFFFFFF, 0.4);
+            window.fillRect(x + 2, y + 2, 15, 15);
+            // Cross bars
+            window.lineStyle(2, 0x654321, 1);
+            window.lineBetween(x, y + 20, x + 40, y + 20);
+            window.lineBetween(x + 20, y, x + 20, y + 40);
+            return window;
+        };
+
+        // Helper function to draw washing post
+        GameScene.prototype.drawWashingPost = function(x, y) {
+            const post = this.add.graphics();
+            // Wood grain effect
+            post.fillStyle(0x8B4513, 1);
+            post.fillRect(x - 6, y - 80, 12, 80);
+            post.fillStyle(0x654321, 1);
+            post.fillRect(x - 5, y - 80, 10, 80);
+            // Highlights
+            post.lineStyle(2, 0xA0522D, 1);
+            post.lineBetween(x - 3, y - 75, x - 3, y - 5);
+            // Post top
+            post.fillStyle(0x8B4513, 1);
+            post.fillCircle(x, y - 80, 8);
+            post.lineStyle(2, 0x000000, 1);
+            post.strokeCircle(x, y - 80, 8);
+            return post;
+        };
+
+        // Helper function to draw pool
+        GameScene.prototype.drawPool = function(x, y) {
+            const poolContainer = this.add.container(x, y);
+
+            // Pool shadow
+            const shadow = this.add.graphics();
+            shadow.fillStyle(0x000000, 0.2);
+            shadow.fillRoundedRect(-145, -5, 290, 165, 10);
+            poolContainer.add(shadow);
+
+            // Pool border (concrete)
+            const border = this.add.graphics();
+            border.fillStyle(0xCCCCCC, 1);
+            border.fillRoundedRect(-150, 0, 300, 160, 10);
+            border.lineStyle(3, 0x999999, 1);
+            border.strokeRoundedRect(-150, 0, 300, 160, 10);
+            poolContainer.add(border);
+
+            // Water with gradient
+            const water = this.add.graphics();
+            water.fillGradientStyle(0x00BFFF, 0x00BFFF, 0x1E90FF, 0x0066CC, 1);
+            water.fillRoundedRect(-140, 10, 280, 140, 8);
+            poolContainer.add(water);
+
+            // Water shimmer effect
+            const shimmer = this.add.graphics();
+            shimmer.fillStyle(0xFFFFFF, 0.3);
+            shimmer.fillEllipse(-60, 40, 80, 20);
+            shimmer.fillEllipse(50, 70, 60, 15);
+            poolContainer.add(shimmer);
+
+            // Pool ladder
+            const ladder = this.add.graphics();
+            ladder.lineStyle(4, 0xC0C0C0, 1);
+            ladder.strokeRect(130, 10, 20, 80);
+            ladder.lineBetween(130, 30, 150, 30);
+            ladder.lineBetween(130, 50, 150, 50);
+            ladder.lineBetween(130, 70, 150, 70);
+            poolContainer.add(ladder);
+
+            // Store pool bounds for collision
+            this.pool = this.add.rectangle(x, y + 80, 280, 140);
+            this.pool.setAlpha(0); // Invisible, just for collision
+
+            return poolContainer;
+        };
+
+        // Helper function to draw laundry basket
+        GameScene.prototype.drawBasket = function(x, y) {
+            const basket = this.add.graphics();
+            // Basket body (wicker brown)
+            basket.fillStyle(0xD2691E, 1);
+            basket.fillRect(x - 25, y - 20, 50, 40);
+            // Wicker texture
+            basket.lineStyle(2, 0x8B4513, 1);
+            for (let i = 0; i < 4; i++) {
+                basket.lineBetween(x - 25, y - 15 + i * 10, x + 25, y - 15 + i * 10);
+            }
+            for (let i = 0; i < 5; i++) {
+                basket.lineBetween(x - 20 + i * 10, y - 20, x - 20 + i * 10, y + 20);
+            }
+            // Basket rim
+            basket.lineStyle(4, 0x654321, 1);
+            basket.strokeRect(x - 25, y - 20, 50, 40);
+            // Handle
+            basket.lineStyle(3, 0x8B4513, 1);
+            basket.strokeArc(x, y - 20, 20, Phaser.Math.DegToRad(180), Phaser.Math.DegToRad(0), true);
+
+            this.basket = basket;
+            return basket;
+        };
+
+        // Helper function to draw Uncle Paul
+        GameScene.prototype.drawUnclePaul = function(x, y) {
+            const paul = this.add.container(x, y);
+
+            // Shadow
+            const shadow = this.add.ellipse(0, 60, 40, 15, 0x000000, 0.3);
+            paul.add(shadow);
+
+            // Legs
+            const leftLeg = this.add.graphics();
+            leftLeg.fillStyle(0x4169E1, 1);
+            leftLeg.fillRect(-12, 20, 10, 35);
+            leftLeg.lineStyle(2, 0x000000, 1);
+            leftLeg.strokeRect(-12, 20, 10, 35);
+            paul.add(leftLeg);
+
+            const rightLeg = this.add.graphics();
+            rightLeg.fillStyle(0x4169E1, 1);
+            rightLeg.fillRect(2, 20, 10, 35);
+            rightLeg.lineStyle(2, 0x000000, 1);
+            rightLeg.strokeRect(2, 20, 10, 35);
+            paul.add(rightLeg);
+
+            // Shoes
+            const leftShoe = this.add.ellipse(-7, 57, 14, 8, 0x000000);
+            leftShoe.setStrokeStyle(2, 0x000000);
+            paul.add(leftShoe);
+
+            const rightShoe = this.add.ellipse(7, 57, 14, 8, 0x000000);
+            rightShoe.setStrokeStyle(2, 0x000000);
+            paul.add(rightShoe);
+
+            // Body (torso)
+            const body = this.add.graphics();
+            body.fillStyle(0xFF6B35, 1); // Orange shirt
+            body.fillEllipse(0, 0, 35, 45);
+            body.lineStyle(3, 0x000000, 1);
+            body.strokeEllipse(0, 0, 35, 45);
+            // Shirt collar
+            body.fillStyle(0xFFFFFF, 1);
+            body.fillTriangle(-8, -15, 8, -15, 0, -5);
+            paul.add(body);
+
+            // Arms
+            const leftArm = this.add.graphics();
+            leftArm.fillStyle(0xFF6B35, 1);
+            leftArm.fillEllipse(-20, 0, 10, 35);
+            leftArm.lineStyle(2, 0x000000, 1);
+            leftArm.strokeEllipse(-20, 0, 10, 35);
+            paul.add(leftArm);
+
+            const rightArm = this.add.graphics();
+            rightArm.fillStyle(0xFF6B35, 1);
+            rightArm.fillEllipse(20, 5, 10, 30);
+            rightArm.lineStyle(2, 0x000000, 1);
+            rightArm.strokeEllipse(20, 5, 10, 30);
+            // Hand giving thumbs up
+            rightArm.fillStyle(0xFFDBAC, 1);
+            rightArm.fillCircle(20, 20, 6);
+            rightArm.lineStyle(2, 0x000000, 1);
+            rightArm.strokeCircle(20, 20, 6);
+            // Thumb
+            rightArm.fillStyle(0xFFDBAC, 1);
+            rightArm.fillRect(18, 12, 4, 8);
+            paul.add(rightArm);
+
+            // Neck
+            const neck = this.add.rectangle(0, -20, 12, 10, 0xFFDBAC);
+            neck.setStrokeStyle(2, 0x000000);
+            paul.add(neck);
+
+            // Head
+            const head = this.add.circle(0, -35, 18, 0xFFDBAC);
+            head.setStrokeStyle(3, 0x000000);
+            paul.add(head);
+
+            // Ear
+            const ear = this.add.circle(-16, -35, 6, 0xFFDBAC);
+            ear.setStrokeStyle(2, 0x000000);
+            paul.add(ear);
+
+            // Eyes
+            const leftEye = this.add.circle(-6, -37, 3, 0xFFFFFF);
+            leftEye.setStrokeStyle(2, 0x000000);
+            paul.add(leftEye);
+            const leftPupil = this.add.circle(-5, -37, 1.5, 0x000000);
+            paul.add(leftPupil);
+
+            const rightEye = this.add.circle(6, -37, 3, 0xFFFFFF);
+            rightEye.setStrokeStyle(2, 0x000000);
+            paul.add(rightEye);
+            const rightPupil = this.add.circle(7, -37, 1.5, 0x000000);
+            paul.add(rightPupil);
+
+            // Nose
+            const nose = this.add.graphics();
+            nose.lineStyle(2, 0x000000, 1);
+            nose.beginPath();
+            nose.moveTo(0, -35);
+            nose.lineTo(2, -32);
+            nose.strokePath();
+            paul.add(nose);
+
+            // Mouth (smile)
+            const mouth = this.add.graphics();
+            mouth.lineStyle(2, 0x000000, 1);
+            mouth.strokeArc(0, -30, 8, Phaser.Math.DegToRad(20), Phaser.Math.DegToRad(160), false);
+            paul.add(mouth);
+
+            // Hair (messy)
+            const hair = this.add.graphics();
+            hair.fillStyle(0x8B4513, 1);
+            hair.fillCircle(-8, -48, 6);
+            hair.fillCircle(0, -50, 6);
+            hair.fillCircle(8, -48, 6);
+            hair.fillCircle(-4, -50, 5);
+            hair.fillCircle(4, -49, 5);
+            hair.lineStyle(2, 0x000000, 1);
+            hair.strokeCircle(-8, -48, 6);
+            hair.strokeCircle(0, -50, 6);
+            hair.strokeCircle(8, -48, 6);
+            paul.add(hair);
+
+            return paul;
+        };
+
+        GameScene.prototype.createUI = function() {
+            const width = this.cameras.main.width;
+            const height = this.cameras.main.height;
+
+            // Score text
+            this.scoreText = this.add.text(20, 20, 'Score: 0', {
+                fontSize: '24px',
+                color: '#fff',
+                stroke: '#000',
+                strokeThickness: 4
+            });
+
+            // Strikes/Hearts
+            this.strikesText = this.add.text(width - 20, 20, '❤️❤️❤️', {
+                fontSize: '24px'
+            }).setOrigin(1, 0);
+
+            // Wind indicator
+            this.windText = this.add.text(20, 60, '', {
+                fontSize: '20px',
+                color: '#fff',
+                stroke: '#000',
+                strokeThickness: 3
+            });
+            this.updateWindDisplay();
+
+            // Power meter background
+            this.powerMeterBg = this.add.rectangle(width / 2, height - 50, 200, 30, 0x333333);
+            this.powerMeterBg.setStrokeStyle(2, 0xffffff);
+
+            // Power meter fill
+            this.powerMeterFill = this.add.rectangle(width / 2 - 100, height - 50, 0, 26, 0x00FF00);
+            this.powerMeterFill.setOrigin(0, 0.5);
+
+            // Instruction text
+            this.instructionText = this.add.text(width / 2, height - 90, 'TAP & HOLD TO THROW', {
+                fontSize: '18px',
+                color: '#fff',
+                stroke: '#000',
+                strokeThickness: 3
+            }).setOrigin(0.5);
+        };
+
+        GameScene.prototype.createLaundryItem = function() {
+            if (this.currentItem) {
+                this.currentItem.destroy();
+            }
+
+            // Random clothing types
+            const types = ['tshirt', 'pants', 'sock', 'shorts'];
+            const type = Phaser.Utils.Array.GetRandom(types);
+
+            // Random colors for variety
+            const colors = [0xFF69B4, 0x9370DB, 0x20B2AA, 0xFFD700, 0xFF6347, 0x00CED1];
+            const color = Phaser.Utils.Array.GetRandom(colors);
+
+            // Create clothing item container
+            this.currentItem = this.add.container(60, this.cameras.main.height - 80);
+
+            // Draw the clothing item based on type
+            if (type === 'tshirt') {
+                this.currentItem.clothingGraphic = this.drawTShirt(color);
+            } else if (type === 'pants') {
+                this.currentItem.clothingGraphic = this.drawPants(color);
+            } else if (type === 'sock') {
+                this.currentItem.clothingGraphic = this.drawSock(color);
+            } else if (type === 'shorts') {
+                this.currentItem.clothingGraphic = this.drawShorts(color);
+            }
+
+            this.currentItem.add(this.currentItem.clothingGraphic);
+
+            this.physics.add.existing(this.currentItem);
+            this.currentItem.body.setSize(30, 30);
+            this.currentItem.body.setGravityY(0);
+            this.currentItem.body.setAllowGravity(false);
+
+            this.isItemFlying = false;
+        };
+
+        // Draw a T-shirt
+        GameScene.prototype.drawTShirt = function(color) {
+            const shirt = this.add.graphics();
+            // Body
+            shirt.fillStyle(color, 1);
+            shirt.fillRect(-12, -8, 24, 20);
+            // Sleeves
+            shirt.fillRect(-18, -6, 6, 10);
+            shirt.fillRect(12, -6, 6, 10);
+            // Neck
+            shirt.fillStyle(color, 1);
+            shirt.fillRect(-4, -10, 8, 4);
+            // Outline
+            shirt.lineStyle(2, 0x000000, 1);
+            shirt.strokeRect(-12, -8, 24, 20);
+            shirt.strokeRect(-18, -6, 6, 10);
+            shirt.strokeRect(12, -6, 6, 10);
+            shirt.strokeRect(-4, -10, 8, 4);
+            // Collar detail
+            shirt.lineStyle(1, 0x000000, 0.5);
+            shirt.lineBetween(-4, -8, -4, -2);
+            shirt.lineBetween(4, -8, 4, -2);
+            return shirt;
+        };
+
+        // Draw pants
+        GameScene.prototype.drawPants = function(color) {
+            const pants = this.add.graphics();
+            // Waist
+            pants.fillStyle(color, 1);
+            pants.fillRect(-12, -10, 24, 4);
+            // Left leg
+            pants.fillRect(-12, -6, 10, 18);
+            // Right leg
+            pants.fillRect(2, -6, 10, 18);
+            // Belt
+            pants.fillStyle(0x654321, 1);
+            pants.fillRect(-12, -10, 24, 2);
+            // Outline
+            pants.lineStyle(2, 0x000000, 1);
+            pants.strokeRect(-12, -10, 24, 4);
+            pants.strokeRect(-12, -6, 10, 18);
+            pants.strokeRect(2, -6, 10, 18);
+            // Pockets
+            pants.lineStyle(1, 0x000000, 0.5);
+            pants.strokeRect(-9, -3, 5, 5);
+            pants.strokeRect(4, -3, 5, 5);
+            return pants;
+        };
+
+        // Draw a sock
+        GameScene.prototype.drawSock = function(color) {
+            const sock = this.add.graphics();
+            // Foot
+            sock.fillStyle(color, 1);
+            sock.fillEllipse(0, 2, 16, 12);
+            // Ankle
+            sock.fillRect(-6, -8, 12, 12);
+            // Cuff
+            sock.fillStyle(color, 1);
+            sock.fillRect(-7, -10, 14, 4);
+            // Outline
+            sock.lineStyle(2, 0x000000, 1);
+            sock.strokeEllipse(0, 2, 16, 12);
+            sock.strokeRect(-6, -8, 12, 12);
+            sock.strokeRect(-7, -10, 14, 4);
+            // Stripes
+            sock.lineStyle(2, 0xFFFFFF, 0.5);
+            sock.lineBetween(-7, -9, 7, -9);
+            sock.lineBetween(-7, -5, 7, -5);
+            return sock;
+        };
+
+        // Draw shorts
+        GameScene.prototype.drawShorts = function(color) {
+            const shorts = this.add.graphics();
+            // Waist
+            shorts.fillStyle(color, 1);
+            shorts.fillRect(-12, -10, 24, 3);
+            // Left leg
+            shorts.fillRect(-12, -7, 10, 12);
+            // Right leg
+            shorts.fillRect(2, -7, 10, 12);
+            // Belt
+            shorts.fillStyle(0xFFFFFF, 1);
+            shorts.fillRect(-12, -10, 24, 1);
+            // Outline
+            shorts.lineStyle(2, 0x000000, 1);
+            shorts.strokeRect(-12, -10, 24, 3);
+            shorts.strokeRect(-12, -7, 10, 12);
+            shorts.strokeRect(2, -7, 10, 12);
+            // Pockets
+            shorts.lineStyle(1, 0x000000, 0.5);
+            shorts.strokeRect(-9, -4, 5, 4);
+            shorts.strokeRect(4, -4, 5, 4);
+            return shorts;
+        };
+
+        GameScene.prototype.onPointerDown = function() {
+            if (this.isItemFlying) return;
+
+            this.isPowerCharging = true;
+            this.powerLevel = 20; // Minimum power
+        };
+
+        GameScene.prototype.onPointerUp = function() {
+            if (!this.isPowerCharging || this.isItemFlying) return;
+
+            this.isPowerCharging = false;
+            this.throwItem();
+        };
+
+        GameScene.prototype.throwItem = function() {
+            if (!this.currentItem) return;
+
+            this.isItemFlying = true;
+            this.currentItem.body.setAllowGravity(true);
+
+            // Calculate velocity based on power level
+            const powerRatio = this.powerLevel / 100;
+            const velocityX = 150 + (powerRatio * 100);
+            const velocityY = -400 - (powerRatio * 200);
+
+            this.currentItem.body.setVelocity(velocityX, velocityY);
+
+            // Store wind effect for this throw
+            this.currentWindEffect = this.windSpeed * this.windDirection;
+        };
+
+        GameScene.prototype.randomizeWind = function() {
+            // Random speed between 5 and 30
+            this.windSpeed = Phaser.Math.Between(5, 30);
+
+            // Random direction
+            this.windDirection = Phaser.Math.RND.pick([1, -1]);
+
+            this.updateWindDisplay();
+        };
+
+        GameScene.prototype.updateWindDisplay = function() {
+            const arrow = this.windDirection === 1 ? '→' : '←';
+            this.windText.setText(`Wind: ${arrow} ${this.windSpeed}`);
+        };
+
+        GameScene.prototype.update = function() {
+            // Update power meter
+            if (this.isPowerCharging) {
+                this.powerLevel = Math.min(100, this.powerLevel + this.powerChargeSpeed);
+                this.powerMeterFill.width = (this.powerLevel / 100) * 200;
+
+                // Color changes with power
+                if (this.powerLevel < 40) {
+                    this.powerMeterFill.setFillStyle(0xFF0000); // Red
+                } else if (this.powerLevel < 70) {
+                    this.powerMeterFill.setFillStyle(0xFFFF00); // Yellow
+                } else {
+                    this.powerMeterFill.setFillStyle(0x00FF00); // Green
+                }
+            } else {
+                this.powerMeterFill.width = 0;
+            }
+
+            // Apply wind effect to flying item
+            if (this.isItemFlying && this.currentItem && this.currentItem.body) {
+                this.currentItem.body.setVelocityX(
+                    this.currentItem.body.velocity.x + (this.currentWindEffect * 0.5)
+                );
+
+                // Check for collisions
+                this.checkCollisions();
+            }
+        };
+
+        GameScene.prototype.checkCollisions = function() {
+            if (!this.currentItem || !this.currentItem.body) return;
+
+            const item = this.currentItem;
+            const itemBounds = item.getBounds();
+
+            // Check if item is out of bounds
+            if (item.y > this.cameras.main.height + 50 ||
+                item.x < -50 ||
+                item.x > this.cameras.main.width + 50) {
+                this.onMissed();
+                return;
+            }
+
+            // Check collision with washing line (success)
+            const lineBounds = this.washingLine.getBounds();
+            if (Phaser.Geom.Intersects.RectangleToRectangle(itemBounds, lineBounds) &&
+                Math.abs(item.body.velocity.y) < 100) { // Must be moving slowly enough
+                this.onSuccess();
+                return;
+            }
+
+            // Check collision with pool (failure)
+            const poolBounds = this.pool.getBounds();
+            if (Phaser.Geom.Intersects.RectangleToRectangle(itemBounds, poolBounds)) {
+                this.onPoolHit();
+                return;
+            }
+        };
+
+        GameScene.prototype.onSuccess = function() {
+            // Stop the item on the line
+            this.currentItem.body.setVelocity(0, 0);
+            this.currentItem.body.setAllowGravity(false);
+
+            // Update score
+            this.score++;
+            this.successfulHangs++;
+            this.scoreText.setText(`Score: ${this.score}`);
+
+            // Flash item
+            this.tweens.add({
+                targets: this.currentItem,
+                alpha: 0.3,
+                duration: 100,
+                yoyo: true,
+                repeat: 2
+            });
+
+            // Increase difficulty every 5 successful hangs
+            if (this.successfulHangs % 5 === 0 && this.windSpeed < 30) {
+                this.windSpeed = Math.min(30, this.windSpeed + 5);
+            }
+
+            // Randomize wind for next throw
+            this.randomizeWind();
+
+            // Create new item after delay
+            this.time.delayedCall(800, () => {
+                this.createLaundryItem();
+            });
+        };
+
+        GameScene.prototype.onPoolHit = function() {
+            // Splash effect (simple scale animation)
+            this.tweens.add({
+                targets: this.currentItem,
+                scaleX: 0,
+                scaleY: 0,
+                alpha: 0,
+                duration: 300,
+                onComplete: () => {
+                    if (this.currentItem) {
+                        this.currentItem.destroy();
+                        this.currentItem = null;
+                    }
+                }
+            });
+
+            // Pool splash effect
+            const splash = this.add.circle(
+                this.currentItem.x,
+                this.pool.y - this.pool.height / 2,
+                20,
+                0xFFFFFF,
+                0.7
+            );
+            this.tweens.add({
+                targets: splash,
+                radius: 50,
+                alpha: 0,
+                duration: 400,
+                onComplete: () => splash.destroy()
+            });
+
+            this.loseStrike();
+        };
+
+        GameScene.prototype.onMissed = function() {
+            if (this.currentItem) {
+                this.currentItem.destroy();
+                this.currentItem = null;
+            }
+
+            this.loseStrike();
+        };
+
+        GameScene.prototype.loseStrike = function() {
+            this.strikes--;
+
+            // Update hearts display
+            const hearts = '❤️'.repeat(this.strikes);
+            const emptyHearts = '🖤'.repeat(3 - this.strikes);
+            this.strikesText.setText(hearts + emptyHearts);
+
+            if (this.strikes <= 0) {
+                this.gameOver();
+            } else {
+                // Create new item after delay
+                this.time.delayedCall(800, () => {
+                    this.createLaundryItem();
+                });
+            }
+        };
+
+        GameScene.prototype.gameOver = function() {
+            this.scene.start('GameOverScene', { score: this.score });
+        };
+
+        // ============================================
+        // GAME OVER SCENE
+        // ============================================
+        function GameOverScene() {
+            Phaser.Scene.call(this, { key: 'GameOverScene' });
+        }
+
+        GameOverScene.prototype = Object.create(Phaser.Scene.prototype);
+        GameOverScene.prototype.constructor = GameOverScene;
+
+        GameOverScene.prototype.init = function(data) {
+            this.finalScore = data.score || 0;
+        };
+
+        GameOverScene.prototype.create = function() {
+            const centerX = this.cameras.main.centerX;
+            const centerY = this.cameras.main.centerY;
+
+            // Game Over title
+            this.add.text(centerX, centerY - 150, 'GAME OVER', {
+                fontSize: '52px',
+                fontFamily: 'Arial',
+                fontStyle: 'bold',
+                color: '#FF0000',
+                stroke: '#000',
+                strokeThickness: 6
+            }).setOrigin(0.5);
+
+            // Pool message
+            this.add.text(centerX, centerY - 50, 'Too many items\nin the pool!', {
+                fontSize: '24px',
+                color: '#fff',
+                stroke: '#000',
+                strokeThickness: 4,
+                align: 'center'
+            }).setOrigin(0.5);
+
+            // Final score
+            this.add.text(centerX, centerY + 50, `Final Score: ${this.finalScore}`, {
+                fontSize: '32px',
+                fontFamily: 'Arial',
+                fontStyle: 'bold',
+                color: '#FFD700',
+                stroke: '#000',
+                strokeThickness: 5
+            }).setOrigin(0.5);
+
+            // Play Again button
+            const playButton = this.add.rectangle(centerX, centerY + 150, 200, 60, 0x00CC00);
+            playButton.setInteractive({ useHandCursor: true });
+
+            const playText = this.add.text(centerX, centerY + 150, 'PLAY AGAIN', {
+                fontSize: '28px',
+                fontFamily: 'Arial',
+                fontStyle: 'bold',
+                color: '#fff'
+            }).setOrigin(0.5);
+
+            playButton.on('pointerdown', () => {
+                this.scene.start('GameScene');
+            });
+
+            // Button hover effect
+            playButton.on('pointerover', () => {
+                playButton.setFillStyle(0x00FF00);
+            });
+
+            playButton.on('pointerout', () => {
+                playButton.setFillStyle(0x00CC00);
+            });
+
+            // Menu button
+            const menuButton = this.add.rectangle(centerX, centerY + 230, 200, 60, 0x666666);
+            menuButton.setInteractive({ useHandCursor: true });
+
+            const menuText = this.add.text(centerX, centerY + 230, 'MENU', {
+                fontSize: '28px',
+                fontFamily: 'Arial',
+                fontStyle: 'bold',
+                color: '#fff'
+            }).setOrigin(0.5);
+
+            menuButton.on('pointerdown', () => {
+                this.scene.start('MenuScene');
+            });
+
+            // Button hover effect
+            menuButton.on('pointerover', () => {
+                menuButton.setFillStyle(0x888888);
+            });
+
+            menuButton.on('pointerout', () => {
+                menuButton.setFillStyle(0x666666);
+            });
+        };
+    </script>
+</body>
+</html>
