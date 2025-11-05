@@ -3,7 +3,12 @@
     "allow": [
       "Bash(npm install)",
       "Bash(npm run dev:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nAdd complete viral game features: Title screen, balanced gameplay, younger Uncle Paul\n\nFeatures added:\n- Title screen with animated logo and high score display\n- Redesigned Uncle Paul as young 20-something character\n- Balanced physics for achievable gameplay (50px collision zone, reduced wind)\n- Progressive difficulty (5-30 mph wind range)\n- Combo system with multipliers and special effects\n- Achievement system with 4 unlockable achievements\n- Perfect throw detection with 2x scoring\n- Tutorial overlay for first-time players\n- High score tracking with localStorage\n- Golden particle effects and floating score popups\n- Realistic splash effects and dynamic shadows\n- Enhanced game over screen with detailed stats\n- Photorealistic Portuguese villa graphics\n- Animated clouds and water shimmer effects\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git remote add:*)",
+      "Bash(git commit:*)",
+      "Bash(git branch:*)",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "ask": []
