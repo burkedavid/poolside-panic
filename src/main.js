@@ -754,7 +754,7 @@ class GameScene extends Phaser.Scene {
     // Score text with high score
     this.scoreText = this.add.text(20, 20, 'Score: 0', {
       fontSize: '28px',
-      fontFamily: 'Comic Sans MS, cursive',
+      fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
       color: '#FFD700',
       stroke: '#000000',
       strokeThickness: 4
@@ -763,7 +763,7 @@ class GameScene extends Phaser.Scene {
     // High score indicator
     this.highScoreText = this.add.text(20, 55, `Best: ${this.highScore}`, {
       fontSize: '18px',
-      fontFamily: 'Comic Sans MS, cursive',
+      fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
       color: '#FFFFFF',
       stroke: '#000000',
       strokeThickness: 3
@@ -778,7 +778,7 @@ class GameScene extends Phaser.Scene {
     // Combo display (initially hidden)
     this.comboText = this.add.text(180, 100, '', {
       fontSize: '36px',
-      fontFamily: 'Comic Sans MS, cursive',
+      fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
       color: '#FF69B4',
       stroke: '#000000',
       strokeThickness: 5
@@ -787,7 +787,7 @@ class GameScene extends Phaser.Scene {
     // Multiplier display
     this.multiplierText = this.add.text(360, 55, '', {
       fontSize: '22px',
-      fontFamily: 'Comic Sans MS, cursive',
+      fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
       color: '#00FF00',
       stroke: '#000000',
       strokeThickness: 4
@@ -796,7 +796,7 @@ class GameScene extends Phaser.Scene {
     // Wind indicator with enhanced styling
     this.windText = this.add.text(20, 90, '', {
       fontSize: '22px',
-      fontFamily: 'Comic Sans MS, cursive',
+      fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
       color: '#ffffff',
       stroke: '#000000',
       strokeThickness: 3
@@ -805,7 +805,7 @@ class GameScene extends Phaser.Scene {
     // Perfect throw indicator (hidden)
     this.perfectText = this.add.text(180, 280, 'PERFECT!', {
       fontSize: '48px',
-      fontFamily: 'Comic Sans MS, cursive',
+      fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
       color: '#FFD700',
       stroke: '#FF1493',
       strokeThickness: 6
@@ -826,7 +826,7 @@ class GameScene extends Phaser.Scene {
     // Instruction text
     this.instructionText = this.add.text(180, 695, 'TAP & HOLD TO THROW', {
       fontSize: '16px',
-      fontFamily: 'Comic Sans MS, cursive',
+      fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
       color: '#FFFF00',
       stroke: '#000000',
       strokeThickness: 3
@@ -1208,7 +1208,7 @@ class GameScene extends Phaser.Scene {
   showFloatingScore(x, y, points, isPerfect) {
     const scorePopup = this.add.text(x, y, `+${points}`, {
       fontSize: isPerfect ? '32px' : '24px',
-      fontFamily: 'Comic Sans MS, cursive',
+      fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
       color: isPerfect ? '#FFD700' : '#00FF00',
       stroke: '#000000',
       strokeThickness: 4
@@ -1292,7 +1292,7 @@ class GameScene extends Phaser.Scene {
 
     const title = this.add.text(0, -15, achievement.title, {
       fontSize: '20px',
-      fontFamily: 'Comic Sans MS, cursive',
+      fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
       color: '#FFD700',
       stroke: '#000000',
       strokeThickness: 3
@@ -1300,7 +1300,7 @@ class GameScene extends Phaser.Scene {
 
     const desc = this.add.text(0, 10, achievement.desc, {
       fontSize: '14px',
-      fontFamily: 'Comic Sans MS, cursive',
+      fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
       color: '#FFFFFF'
     }).setOrigin(0.5)
 
@@ -1339,7 +1339,7 @@ class GameScene extends Phaser.Scene {
     if (this.combo >= 3) {
       const breakerText = this.add.text(180, 300, 'COMBO BROKEN!', {
         fontSize: '32px',
-        fontFamily: 'Comic Sans MS, cursive',
+        fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
         color: '#FF0000',
         stroke: '#000000',
         strokeThickness: 5
@@ -1392,7 +1392,7 @@ class GameScene extends Phaser.Scene {
 
     const title = this.add.text(0, -280, 'How to Play', {
       fontSize: '32px',
-      fontFamily: 'Comic Sans MS, cursive',
+      fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
       color: '#FFD700',
       stroke: '#000000',
       strokeThickness: 5
@@ -1412,7 +1412,7 @@ class GameScene extends Phaser.Scene {
     const instructionTexts = instructions.map((text, index) => {
       return this.add.text(0, -200 + index * 40, text, {
         fontSize: '18px',
-        fontFamily: 'Comic Sans MS, cursive',
+        fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
         color: '#FFFFFF',
         align: 'center'
       }).setOrigin(0.5)
@@ -1670,7 +1670,7 @@ class TitleScene extends Phaser.Scene {
     // Game Title with shadow
     const titleShadow = this.add.text(180, 252, "UNCLE PAUL'S", {
       fontSize: '42px',
-      fontFamily: 'Comic Sans MS, cursive',
+      fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
       color: '#000000',
       stroke: '#000000',
       strokeThickness: 8,
@@ -1679,7 +1679,7 @@ class TitleScene extends Phaser.Scene {
 
     const title = this.add.text(180, 250, "UNCLE PAUL'S", {
       fontSize: '42px',
-      fontFamily: 'Comic Sans MS, cursive',
+      fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
       color: '#FFD700',
       stroke: '#FF6B00',
       strokeThickness: 6,
@@ -1688,7 +1688,7 @@ class TitleScene extends Phaser.Scene {
 
     const subtitleShadow = this.add.text(180, 302, 'POOLSIDE PANIC', {
       fontSize: '36px',
-      fontFamily: 'Comic Sans MS, cursive',
+      fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
       color: '#000000',
       stroke: '#000000',
       strokeThickness: 7,
@@ -1697,7 +1697,7 @@ class TitleScene extends Phaser.Scene {
 
     const subtitle = this.add.text(180, 300, 'POOLSIDE PANIC', {
       fontSize: '36px',
-      fontFamily: 'Comic Sans MS, cursive',
+      fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
       color: '#00D4FF',
       stroke: '#0066CC',
       strokeThickness: 5,
@@ -1717,7 +1717,7 @@ class TitleScene extends Phaser.Scene {
     // Tagline
     this.add.text(180, 360, 'Hang laundry, battle the wind!', {
       fontSize: '18px',
-      fontFamily: 'Comic Sans MS, cursive',
+      fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
       color: '#FFFFFF',
       stroke: '#000000',
       strokeThickness: 3
@@ -1728,7 +1728,7 @@ class TitleScene extends Phaser.Scene {
     if (highScore > 0) {
       this.add.text(180, 410, `HIGH SCORE: ${highScore}`, {
         fontSize: '24px',
-        fontFamily: 'Comic Sans MS, cursive',
+        fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
         color: '#FFD700',
         stroke: '#000000',
         strokeThickness: 4
@@ -1744,7 +1744,7 @@ class TitleScene extends Phaser.Scene {
 
     const buttonText = this.add.text(180, 515, '▶ PLAY NOW!', {
       fontSize: '32px',
-      fontFamily: 'Comic Sans MS, cursive',
+      fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
       color: '#FFFFFF',
       stroke: '#000000',
       strokeThickness: 5,
@@ -1788,7 +1788,7 @@ class TitleScene extends Phaser.Scene {
     // Credits at bottom
     this.add.text(180, 680, 'Made with ❤️ for Uncle Paul', {
       fontSize: '14px',
-      fontFamily: 'Comic Sans MS, cursive',
+      fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
       color: '#AAAAAA',
       align: 'center'
     }).setOrigin(0.5)
@@ -1818,7 +1818,7 @@ class GameOverScene extends Phaser.Scene {
     // Game Over text with animation
     const gameOverText = this.add.text(180, 150, 'GAME OVER!', {
       fontSize: '52px',
-      fontFamily: 'Comic Sans MS, cursive',
+      fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
       color: '#FF0000',
       stroke: '#000000',
       strokeThickness: 6
@@ -1836,7 +1836,7 @@ class GameOverScene extends Phaser.Scene {
     // Final score (larger, more prominent)
     this.add.text(180, 220, `Score: ${this.finalScore}`, {
       fontSize: '40px',
-      fontFamily: 'Comic Sans MS, cursive',
+      fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
       color: '#FFD700',
       stroke: '#000000',
       strokeThickness: 5
@@ -1846,7 +1846,7 @@ class GameOverScene extends Phaser.Scene {
     if (this.finalScore >= this.highScore && this.finalScore > 0) {
       const newBestText = this.add.text(180, 265, '🎉 NEW BEST! 🎉', {
         fontSize: '24px',
-        fontFamily: 'Comic Sans MS, cursive',
+        fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
         color: '#00FF00',
         stroke: '#000000',
         strokeThickness: 4
@@ -1867,7 +1867,7 @@ class GameOverScene extends Phaser.Scene {
 
     this.add.text(180, statsY, 'STATS', {
       fontSize: '24px',
-      fontFamily: 'Comic Sans MS, cursive',
+      fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
       color: '#FFFFFF',
       stroke: '#000000',
       strokeThickness: 4
@@ -1875,33 +1875,33 @@ class GameOverScene extends Phaser.Scene {
 
     this.add.text(180, statsY + lineHeight, `Best Combo: ${this.maxCombo}`, {
       fontSize: '20px',
-      fontFamily: 'Comic Sans MS, cursive',
+      fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
       color: '#FF69B4'
     }).setOrigin(0.5)
 
     this.add.text(180, statsY + lineHeight * 2, `Perfect Throws: ${this.perfectThrows}`, {
       fontSize: '20px',
-      fontFamily: 'Comic Sans MS, cursive',
+      fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
       color: '#FFD700'
     }).setOrigin(0.5)
 
     const accuracy = this.totalThrows > 0 ? Math.round((this.finalScore / this.totalThrows) * 100) : 0
     this.add.text(180, statsY + lineHeight * 3, `Accuracy: ${accuracy}%`, {
       fontSize: '20px',
-      fontFamily: 'Comic Sans MS, cursive',
+      fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
       color: '#00FF00'
     }).setOrigin(0.5)
 
     this.add.text(180, statsY + lineHeight * 4, `High Score: ${this.highScore}`, {
       fontSize: '18px',
-      fontFamily: 'Comic Sans MS, cursive',
+      fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
       color: '#AAAAAA'
     }).setOrigin(0.5)
 
     // Uncle Paul says
     this.add.text(180, 360, 'Uncle Paul says:', {
       fontSize: '20px',
-      fontFamily: 'Comic Sans MS, cursive',
+      fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
       color: '#FFFFFF',
       stroke: '#000000',
       strokeThickness: 3
@@ -1918,7 +1918,7 @@ class GameOverScene extends Phaser.Scene {
     const message = Phaser.Utils.Array.GetRandom(messages)
     this.add.text(180, 400, message, {
       fontSize: '18px',
-      fontFamily: 'Comic Sans MS, cursive',
+      fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
       color: '#FFD700',
       stroke: '#000000',
       strokeThickness: 3,
@@ -1935,7 +1935,7 @@ class GameOverScene extends Phaser.Scene {
 
     const buttonText = this.add.text(180, 510, 'PLAY AGAIN', {
       fontSize: '24px',
-      fontFamily: 'Comic Sans MS, cursive',
+      fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
       color: '#FFFFFF',
       stroke: '#000000',
       strokeThickness: 4
