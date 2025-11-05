@@ -12,10 +12,16 @@ class GameScene extends Phaser.Scene {
     this.strikes = 3
     this.windSpeed = 8
     this.windDirection = 1 // 1 = right, -1 = left
+    this.windIntensity = 0.5 // 0 to 1 for dynamic wind
     this.isPowering = false
     this.power = 0
     this.laundryInFlight = null
     this.successfulHangs = 0
+
+    // Flick mechanic variables
+    this.flickStartY = 0
+    this.flickStartTime = 0
+    this.flickStartX = 0
 
     // NEW: Viral game mechanics
     this.combo = 0
@@ -23,9 +29,13 @@ class GameScene extends Phaser.Scene {
     this.multiplier = 1
     this.perfectThrows = 0
     this.totalThrows = 0
+    this.stars = 0 // Star rating system
     this.highScore = parseInt(localStorage.getItem('unclePaulHighScore') || '0')
     this.achievements = JSON.parse(localStorage.getItem('unclePaulAchievements') || '[]')
     this.showTutorial = !localStorage.getItem('unclePaulTutorialSeen')
+
+    // Wind particles array
+    this.windParticlesActive = []
 
     // Create scene elements
     this.createBackground()
@@ -44,10 +54,98 @@ class GameScene extends Phaser.Scene {
     // Randomize initial wind
     this.updateWind()
 
+    // Start continuous wind animation
+    this.startDynamicWind()
+
+    // Create continuous wind particles
+    this.createContinuousWindParticles()
+
     // Show tutorial on first play
     if (this.showTutorial) {
       this.showTutorialOverlay()
     }
+  }
+
+  startDynamicWind() {
+    // Wind oscillates naturally like real weather
+    this.time.addEvent({
+      delay: 100,
+      callback: () => {
+        // Wind intensity oscillates between 0.2 and 1.0
+        this.windIntensity = 0.6 + Math.sin(this.time.now / 2000) * 0.4
+
+        // Occasionally change wind direction (random gusts)
+        if (Phaser.Math.Between(0, 200) === 0) {
+          this.windDirection = -this.windDirection
+          this.showWindGust()
+        }
+
+        // Calculate current wind speed based on intensity
+        const baseWind = 5 + Math.floor(this.successfulHangs / 3)
+        this.windSpeed = baseWind + (this.windIntensity * 15)
+
+        this.updateWindDisplay()
+      },
+      loop: true
+    })
+  }
+
+  createContinuousWindParticles() {
+    // Continuously show wind particles
+    this.time.addEvent({
+      delay: 150,
+      callback: () => {
+        // Number of particles based on wind intensity
+        const particleCount = Math.floor(this.windIntensity * 5) + 2
+
+        for (let i = 0; i < particleCount; i++) {
+          const particle = this.add.graphics()
+          const startX = Phaser.Math.Between(-20, 380)
+          const startY = Phaser.Math.Between(200, 600)
+
+          // Different particle types for variety
+          const particleType = Phaser.Math.Between(0, 2)
+
+          if (particleType === 0) {
+            // Leaf
+            particle.fillStyle(0x90EE90, 0.7)
+            particle.fillEllipse(0, 0, 6, 10)
+          } else if (particleType === 1) {
+            // Dust
+            particle.fillStyle(0xD2B48C, 0.5)
+            particle.fillCircle(0, 0, 3)
+          } else {
+            // Wind streak
+            particle.lineStyle(2, 0xFFFFFF, 0.4)
+            particle.lineBetween(0, 0, 15 * this.windDirection, 0)
+          }
+
+          particle.x = startX
+          particle.y = startY
+          particle.setDepth(5)
+
+          const distance = this.windIntensity * 150 + 50
+          const duration = 1200 - (this.windIntensity * 400)
+
+          this.tweens.add({
+            targets: particle,
+            x: startX + (this.windDirection * distance),
+            y: startY + Phaser.Math.Between(-40, 40),
+            alpha: 0,
+            rotation: Phaser.Math.FloatBetween(-Math.PI, Math.PI),
+            duration: duration,
+            ease: 'Sine.easeOut',
+            onComplete: () => particle.destroy()
+          })
+
+          this.windParticlesActive.push(particle)
+        }
+
+        // Clean up old particles
+        this.windParticlesActive = this.windParticlesActive.filter(p => p.scene)
+      },
+      loop: true
+    })
   }
 
   createBackground() {
@@ -559,28 +657,51 @@ class GameScene extends Phaser.Scene {
     hands.fillRect(-30, 33, 3, 5)
     hands.fillRect(27, 33, 3, 5)
 
-    // Head with realistic skin gradient - YOUNG GUY IN 20s
+    // Head with photorealistic skin gradient - YOUNG GUY IN 20s
     const head = this.add.graphics()
 
-    // Head sphere with youthful fresh shading
-    for (let i = 0; i < 50; i++) {
-      const color = Phaser.Display.Color.Interpolate.ColorWithColor(
-        { r: 255, g: 224, b: 189 },  // Fresh youthful skin
-        { r: 245, g: 210, b: 175 },  // Subtle shadow
-        50, i
-      )
-      head.fillStyle(Phaser.Display.Color.GetColor(color.r, color.g, color.b), 1)
-      head.fillCircle(0 - i * 0.5, -60, 28)
+    // Ultra-realistic head sphere with proper lighting
+    const headRadius = 28
+    for (let angle = 0; angle < Math.PI * 2; angle += 0.1) {
+      for (let radius = 0; radius < headRadius; radius += 1) {
+        const lightAngle = Math.PI * 0.75 // Light from top-left
+        const normalAngle = Math.atan2(Math.sin(angle) * radius, Math.cos(angle) * radius)
+        const lightIntensity = Math.max(0, Math.cos(normalAngle - lightAngle)) * 0.3
+
+        const baseR = 255
+        const baseG = 220
+        const baseB = 185
+
+        const r = Math.floor(baseR - (1 - lightIntensity) * 30)
+        const g = Math.floor(baseG - (1 - lightIntensity) * 35)
+        const b = Math.floor(baseB - (1 - lightIntensity) * 40)
+
+        head.fillStyle(Phaser.Display.Color.GetColor(r, g, b), 1)
+        head.fillCircle(
+          Math.cos(angle) * radius,
+          -60 + Math.sin(angle) * radius,
+          1.5
+        )
+      }
     }
 
-    // Ears with detail
-    head.fillStyle(0xFFDBAC, 1)
-    head.fillEllipse(-24, -58, 9, 14)
-    head.fillEllipse(24, -58, 9, 14)
-    // Inner ear
+    // Realistic ears with depth and detail
+    head.fillStyle(0xFFD5B0, 1)
+    head.fillEllipse(-24, -58, 10, 15)
+    head.fillEllipse(24, -58, 10, 15)
+
+    // Ear shadows
+    head.fillStyle(0x000000, 0.15)
+    head.fillEllipse(-26, -58, 6, 12)
+    head.fillEllipse(22, -58, 6, 12)
+
+    // Inner ear detail
     head.fillStyle(0xE6BEAA, 1)
     head.fillEllipse(-24, -58, 5, 8)
     head.fillEllipse(24, -58, 5, 8)
+    head.fillStyle(0xD4A088, 1)
+    head.fillEllipse(-25, -59, 3, 5)
+    head.fillEllipse(23, -59, 3, 5)
 
     // Modern full hair - dark brown, thick and stylish (20s style)
     head.fillStyle(0x3d2817, 1)
@@ -802,6 +923,18 @@ class GameScene extends Phaser.Scene {
       strokeThickness: 3
     })
 
+    // Wind intensity meter
+    this.windMeter = this.add.graphics()
+
+    // Stars display
+    this.starsText = this.add.text(180, 20, '', {
+      fontSize: '24px',
+      fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
+      color: '#FFD700',
+      stroke: '#000000',
+      strokeThickness: 4
+    }).setOrigin(0.5, 0)
+
     // Perfect throw indicator (hidden)
     this.perfectText = this.add.text(180, 280, 'PERFECT!', {
       fontSize: '48px',
@@ -812,6 +945,11 @@ class GameScene extends Phaser.Scene {
     }).setOrigin(0.5).setAlpha(0)
 
     this.updateWindDisplay()
+    this.updateStarsDisplay()
+  }
+
+  updateStarsDisplay() {
+    this.starsText.setText(`★ ${this.stars}`)
   }
 
   createPowerMeter() {
@@ -824,7 +962,7 @@ class GameScene extends Phaser.Scene {
     this.powerMeterFill = this.add.graphics()
 
     // Instruction text
-    this.instructionText = this.add.text(180, 695, 'TAP & HOLD TO THROW', {
+    this.instructionText = this.add.text(180, 695, 'HOLD, THEN FLICK UP!', {
       fontSize: '16px',
       fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
       color: '#FFFF00',
@@ -834,19 +972,32 @@ class GameScene extends Phaser.Scene {
   }
 
   setupInput() {
-    // Touch/Mouse input
+    // Touch/Mouse input with flick detection
     this.input.on('pointerdown', this.startPowering, this)
     this.input.on('pointerup', this.releaseLaundry, this)
+    this.input.on('pointermove', this.onPointerMove, this)
   }
 
-  startPowering() {
+  startPowering(pointer) {
     if (this.laundryInFlight) return
 
     this.isPowering = true
     this.power = 0
+    this.flickStartY = pointer.y
+    this.flickStartX = pointer.x
+    this.flickStartTime = this.time.now
   }
 
-  releaseLaundry() {
+  onPointerMove(pointer) {
+    if (!this.isPowering) return
+
+    // Track the movement for flick detection
+    this.lastPointerY = pointer.y
+    this.lastPointerX = pointer.x
+    this.lastPointerTime = this.time.now
+  }
+
+  releaseLaundry(pointer) {
     if (!this.isPowering) return
     if (this.power < 10) {
       this.isPowering = false
@@ -854,133 +1005,141 @@ class GameScene extends Phaser.Scene {
     }
 
     this.isPowering = false
-    this.throwLaundry()
+
+    // Calculate flick velocity and direction
+    const flickTime = this.time.now - this.flickStartTime
+    const flickDistanceY = this.flickStartY - pointer.y
+    const flickDistanceX = pointer.x - this.flickStartX
+
+    // Flick must be upward and reasonably fast
+    const flickSpeed = flickDistanceY / Math.max(flickTime, 1)
+    const isValidFlick = flickDistanceY > 30 && flickSpeed > 0.05
+
+    if (isValidFlick) {
+      // Calculate angle based on horizontal movement during flick
+      const flickAngle = Math.atan2(flickDistanceY, flickDistanceX)
+      this.throwLaundry(flickSpeed, flickAngle)
+    } else {
+      // Reset if flick wasn't good enough
+      this.power = 0
+      this.powerMeterFill.clear()
+
+      // Show feedback
+      const feedbackText = this.add.text(180, 400, 'FLICK UP!', {
+        fontSize: '32px',
+        fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
+        color: '#FF0000',
+        stroke: '#000000',
+        strokeThickness: 4
+      }).setOrigin(0.5)
+
+      this.tweens.add({
+        targets: feedbackText,
+        y: 350,
+        alpha: 0,
+        duration: 800,
+        onComplete: () => feedbackText.destroy()
+      })
+    }
   }
 
-  throwLaundry() {
-    // Create realistic laundry item with fabric textures
-    const itemTypes = [
-      { name: 'shirt', colors: [[0xFF6B6B, 0xCC5555], [0x4ECDC4, 0x3DA8A0], [0xFFE66D, 0xCCB857]] },
-      { name: 'shorts', colors: [[0x4169E1, 0x2F4F8F], [0x8B4513, 0x654321], [0x228B22, 0x196B19]] },
-      { name: 'towel', colors: [[0xFF69B4, 0xCC5490], [0x87CEEB, 0x6BA8CC], [0xFFD700, 0xCCAA00]] }
+  throwLaundry(flickSpeed, flickAngle) {
+    // Always create realistic pants/trousers
+    const pantsColors = [
+      [0x1E3A8A, 0x1E293B], // Dark blue jeans
+      [0x475569, 0x1E293B], // Gray pants
+      [0x78350F, 0x431407], // Brown chinos
+      [0x000000, 0x1F2937], // Black dress pants
+      [0x3B82F6, 0x1E40AF]  // Light blue denim
     ]
 
-    const itemType = Phaser.Utils.Array.GetRandom(itemTypes)
-    const colorPair = Phaser.Utils.Array.GetRandom(itemType.colors)
+    const colorPair = Phaser.Utils.Array.GetRandom(pantsColors)
     const baseColor = colorPair[0]
     const shadowColor = colorPair[1]
 
     const laundry = this.add.graphics()
 
-    if (itemType.name === 'shirt') {
-      // Realistic T-shirt with fabric texture
-      for (let i = 0; i < 35; i++) {
-        const color = Phaser.Display.Color.Interpolate.ColorWithColor(
-          Phaser.Display.Color.ValueToColor(baseColor),
-          Phaser.Display.Color.ValueToColor(shadowColor),
-          35, i
-        )
-        laundry.fillStyle(Phaser.Display.Color.GetColor(color.r, color.g, color.b), 1)
-        laundry.fillRect(-15, -20 + i, 30, 1)
-      }
+    // Draw realistic pants/trousers
+    // Waistband
+    laundry.fillStyle(shadowColor, 1)
+    laundry.fillRect(-20, -25, 40, 6)
 
-      // Fabric texture
-      for (let i = 0; i < 50; i++) {
-        const x = Phaser.Math.Between(-14, 14)
-        const y = Phaser.Math.Between(-19, 14)
-        laundry.fillStyle(0x000000, Phaser.Math.FloatBetween(0.02, 0.08))
-        laundry.fillCircle(x, y, 1)
-      }
-
-      // Sleeves with shading
-      for (let i = 0; i < 20; i++) {
-        const color = Phaser.Display.Color.Interpolate.ColorWithColor(
-          Phaser.Display.Color.ValueToColor(baseColor),
-          Phaser.Display.Color.ValueToColor(shadowColor),
-          20, i
-        )
-        laundry.fillStyle(Phaser.Display.Color.GetColor(color.r, color.g, color.b), 1)
-        laundry.fillRect(-20, -15 + i, 10, 1)
-        laundry.fillRect(10, -15 + i, 10, 1)
-      }
-
-      // Collar
-      laundry.fillStyle(shadowColor, 1)
-      laundry.fillRect(-8, -20, 16, 3)
-
-      // Outline
-      laundry.lineStyle(2, 0x000000, 0.3)
-      laundry.strokeRect(-15, -20, 30, 35)
-      laundry.strokeRect(-20, -15, 10, 20)
-      laundry.strokeRect(10, -15, 10, 20)
-
-      // Wrinkles/folds
-      laundry.lineStyle(1, 0x000000, 0.2)
-      laundry.lineBetween(-10, -10, -5, 5)
-      laundry.lineBetween(5, -8, 10, 3)
-
-    } else if (itemType.name === 'shorts') {
-      // Realistic shorts
-      for (let i = 0; i < 30; i++) {
-        const color = Phaser.Display.Color.Interpolate.ColorWithColor(
-          Phaser.Display.Color.ValueToColor(baseColor),
-          Phaser.Display.Color.ValueToColor(shadowColor),
-          30, i
-        )
-        laundry.fillStyle(Phaser.Display.Color.GetColor(color.r, color.g, color.b), 1)
-        laundry.fillRect(-18, -15 + i, 36, 1)
-      }
-
-      // Fabric texture
-      for (let i = 0; i < 40; i++) {
-        const x = Phaser.Math.Between(-17, 17)
-        const y = Phaser.Math.Between(-14, 14)
-        laundry.fillStyle(0x000000, Phaser.Math.FloatBetween(0.03, 0.1))
-        laundry.fillCircle(x, y, 1)
-      }
-
-      // Waistband
-      laundry.fillStyle(shadowColor, 1)
-      laundry.fillRect(-18, -15, 36, 4)
-
-      // Leg openings
-      laundry.fillStyle(0x000000, 0.2)
-      laundry.fillRect(-18, 10, 15, 5)
-      laundry.fillRect(3, 10, 15, 5)
-
-      // Outline
-      laundry.lineStyle(2, 0x000000, 0.3)
-      laundry.strokeRect(-18, -15, 36, 30)
-
-    } else {
-      // Realistic towel
-      for (let i = 0; i < 40; i++) {
-        const color = Phaser.Display.Color.Interpolate.ColorWithColor(
-          Phaser.Display.Color.ValueToColor(baseColor),
-          Phaser.Display.Color.ValueToColor(shadowColor),
-          40, i
-        )
-        laundry.fillStyle(Phaser.Display.Color.GetColor(color.r, color.g, color.b), 1)
-        laundry.fillRect(-20, -20 + i, 40, 1)
-      }
-
-      // Terry cloth texture (loops)
-      for (let i = 0; i < 80; i++) {
-        const x = Phaser.Math.Between(-19, 19)
-        const y = Phaser.Math.Between(-19, 19)
-        laundry.fillStyle(0xFFFFFF, Phaser.Math.FloatBetween(0.1, 0.2))
-        laundry.fillCircle(x, y, 2)
-      }
-
-      // Stripes
-      laundry.fillStyle(shadowColor, 0.4)
-      laundry.fillRect(-20, -18, 40, 3)
-      laundry.fillRect(-20, 15, 40, 3)
-
-      // Outline
-      laundry.lineStyle(2, 0x000000, 0.3)
-      laundry.strokeRect(-20, -20, 40, 40)
+    // Belt loops
+    laundry.fillStyle(shadowColor, 0.8)
+    for (let i = -15; i <= 15; i += 10) {
+      laundry.fillRect(i - 1, -25, 2, 4)
     }
+
+    // Left leg with realistic gradient
+    for (let i = 0; i < 45; i++) {
+      const color = Phaser.Display.Color.Interpolate.ColorWithColor(
+        Phaser.Display.Color.ValueToColor(baseColor),
+        Phaser.Display.Color.ValueToColor(shadowColor),
+        45, i
+      )
+      laundry.fillStyle(Phaser.Display.Color.GetColor(color.r, color.g, color.b), 1)
+      laundry.fillRect(-20, -19 + i, 18, 1)
+    }
+
+    // Right leg with realistic gradient
+    for (let i = 0; i < 45; i++) {
+      const color = Phaser.Display.Color.Interpolate.ColorWithColor(
+        Phaser.Display.Color.ValueToColor(baseColor),
+        Phaser.Display.Color.ValueToColor(shadowColor),
+        45, i
+      )
+      laundry.fillStyle(Phaser.Display.Color.GetColor(color.r, color.g, color.b), 1)
+      laundry.fillRect(2, -19 + i, 18, 1)
+    }
+
+    // Denim texture and stitching
+    for (let i = 0; i < 60; i++) {
+      const x = Phaser.Math.Between(-19, 19)
+      const y = Phaser.Math.Between(-24, 25)
+      laundry.fillStyle(0x000000, Phaser.Math.FloatBetween(0.03, 0.12))
+      laundry.fillCircle(x, y, 0.5)
+    }
+
+    // Seams (center and sides)
+    laundry.lineStyle(1.5, shadowColor, 0.6)
+    laundry.lineBetween(-20, -19, -20, 26) // Left outer seam
+    laundry.lineBetween(20, -19, 20, 26)   // Right outer seam
+    laundry.lineBetween(-2, -19, -2, 26)   // Left inner seam
+    laundry.lineBetween(2, -19, 2, 26)     // Right inner seam
+
+    // Decorative stitching (like jeans)
+    laundry.lineStyle(1, Phaser.Display.Color.GetColor(200, 150, 50), 0.5)
+    laundry.lineBetween(-18, -17, -18, 24)
+    laundry.lineBetween(18, -17, 18, 24)
+
+    // Front pockets
+    laundry.lineStyle(1.5, shadowColor, 0.7)
+    laundry.strokeRect(-16, -15, 12, 10) // Left pocket
+    laundry.strokeRect(4, -15, 12, 10)   // Right pocket
+
+    // Back pockets outline
+    laundry.lineStyle(1, shadowColor, 0.5)
+    laundry.strokeRect(-15, 5, 10, 8)
+    laundry.strokeRect(5, 5, 10, 8)
+
+    // Button and zipper detail
+    laundry.fillStyle(0xC0C0C0, 1)
+    laundry.fillCircle(0, -23, 2) // Button
+    laundry.lineStyle(1, 0x888888, 1)
+    laundry.lineBetween(0, -20, 0, -5) // Zipper
+
+    // Wrinkles and folds for realism
+    laundry.lineStyle(1, 0x000000, 0.15)
+    laundry.lineBetween(-12, -5, -8, 10)
+    laundry.lineBetween(8, -8, 12, 8)
+    laundry.lineBetween(-5, 15, -2, 22)
+    laundry.lineBetween(2, 18, 5, 24)
+
+    // Outer outline
+    laundry.lineStyle(2, 0x000000, 0.4)
+    laundry.strokeRect(-20, -25, 40, 6)   // Waistband
+    laundry.strokeRect(-20, -19, 18, 45)  // Left leg
+    laundry.strokeRect(2, -19, 18, 45)    // Right leg
 
     // Add dynamic shadow that will move with the item
     const shadow = this.add.graphics()
@@ -993,19 +1152,49 @@ class GameScene extends Phaser.Scene {
 
     this.physics.add.existing(laundry)
 
-    // Balanced physics - challenging but achievable
+    // Advanced physics based on flick gesture and wind
     const powerFactor = this.power / 100
-    const baseVelocityX = powerFactor * 300
-    const windEffect = this.windSpeed * this.windDirection * 8  // Reduced wind impact for better control
+    const flickBonus = flickSpeed * 200 // Flick speed adds significant velocity
+
+    // Base velocity from power and flick
+    const baseVelocityX = (powerFactor * 250) + (Math.cos(flickAngle) * flickBonus)
+    const baseVelocityY = -(powerFactor * 500) - (Math.sin(flickAngle) * flickBonus) - 200
+
+    // Wind effect is now dynamic and stronger
+    const windEffect = this.windSpeed * this.windDirection * 10
+
     const velocityX = baseVelocityX + windEffect
-    const velocityY = -(powerFactor * 600) - 150
+    const velocityY = baseVelocityY
 
     laundry.body.setVelocity(velocityX, velocityY)
-    laundry.body.setAngularVelocity(Phaser.Math.Between(150, 300))
-    laundry.body.setDrag(10, 5)  // Reduced drag for more predictable trajectory
+    laundry.body.setAngularVelocity(Phaser.Math.Between(100, 250) * (flickSpeed + 0.5))
+    laundry.body.setDrag(12, 6)
 
     this.laundryInFlight = laundry
-    this.totalThrows++  // Track total throws
+    this.totalThrows++
+
+    // Visual feedback for flick quality
+    if (flickSpeed > 0.15) {
+      // Great flick!
+      const trailParticles = 8
+      for (let i = 0; i < trailParticles; i++) {
+        const trail = this.add.graphics()
+        trail.fillStyle(0xFFD700, 0.6)
+        trail.fillCircle(0, 0, 5)
+        trail.x = laundry.x
+        trail.y = laundry.y
+        trail.setDepth(3)
+
+        this.tweens.add({
+          targets: trail,
+          alpha: 0,
+          scale: 0.3,
+          duration: 400,
+          delay: i * 50,
+          onComplete: () => trail.destroy()
+        })
+      }
+    }
 
     // Reset power
     this.power = 0
@@ -1026,7 +1215,36 @@ class GameScene extends Phaser.Scene {
 
   updateWindDisplay() {
     const arrow = this.windDirection === 1 ? '→' : '←'
-    this.windText.setText(`Wind: ${arrow} ${this.windSpeed}`)
+    const windSpeedRounded = Math.round(this.windSpeed)
+
+    // Color code wind based on intensity
+    let windColor = '#00FF00' // Low wind - green
+    if (this.windIntensity > 0.7) {
+      windColor = '#FF0000' // High wind - red
+    } else if (this.windIntensity > 0.5) {
+      windColor = '#FFA500' // Medium wind - orange
+    }
+
+    this.windText.setText(`Wind: ${arrow} ${windSpeedRounded} mph`)
+    this.windText.setColor(windColor)
+
+    // Update wind intensity meter
+    if (this.windMeter) {
+      this.windMeter.clear()
+
+      // Background
+      this.windMeter.fillStyle(0x333333, 0.6)
+      this.windMeter.fillRect(20, 125, 100, 10)
+
+      // Fill based on intensity
+      const meterColor = this.windIntensity > 0.7 ? 0xFF0000 : (this.windIntensity > 0.5 ? 0xFFA500 : 0x00FF00)
+      this.windMeter.fillStyle(meterColor, 0.9)
+      this.windMeter.fillRect(20, 125, this.windIntensity * 100, 10)
+
+      // Border
+      this.windMeter.lineStyle(2, 0xFFFFFF, 0.8)
+      this.windMeter.strokeRect(20, 125, 100, 10)
+    }
   }
 
   checkLaundryCollision() {
@@ -1082,15 +1300,43 @@ class GameScene extends Phaser.Scene {
     // Snap to line
     laundry.y = 290
 
-    // Check for perfect throw (landed near center of line)
+    // Calculate performance metrics for star rating
     const lineCenter = 180
+    const distanceFromCenter = Math.abs(laundry.x - lineCenter)
     const perfectRange = 30
-    const isPerfect = Math.abs(laundry.x - lineCenter) < perfectRange
+    const goodRange = 60
 
+    const isPerfect = distanceFromCenter < perfectRange
+    const isGood = distanceFromCenter < goodRange
+
+    // Star rating system (like Angry Birds)
+    let starsEarned = 1
     if (isPerfect) {
+      starsEarned = 3
       this.perfectThrows++
       this.showPerfectThrow()
+
+      // SLOW MOTION EFFECT for perfect throws!
+      this.time.timeScale = 0.3
+      this.time.delayedCall(800, () => {
+        this.time.timeScale = 1
+      })
+
+      // Epic camera zoom
+      this.cameras.main.zoom = 1.15
+      this.tweens.add({
+        targets: this.cameras.main,
+        zoom: 1,
+        duration: 1000,
+        ease: 'Cubic.easeOut'
+      })
+    } else if (isGood) {
+      starsEarned = 2
     }
+
+    this.stars += starsEarned
+    this.showStars(laundry.x, laundry.y, starsEarned)
+    this.updateStarsDisplay()
 
     // Combo system
     this.combo++
@@ -1148,7 +1394,15 @@ class GameScene extends Phaser.Scene {
       this.showWindGust()
     }
 
-    // Clear laundry reference
+    // Clear laundry reference and clean up shadow safely
+    try {
+      if (laundry && laundry.shadow && laundry.shadow.scene) {
+        laundry.shadow.destroy()
+      }
+    } catch (error) {
+      console.log('Error cleaning up shadow:', error)
+    }
+
     this.laundryInFlight = null
 
     // Flash success
@@ -1163,6 +1417,73 @@ class GameScene extends Phaser.Scene {
 
     // Check achievements
     this.checkAchievements()
+  }
+
+  showStars(x, y, count) {
+    // Show stars like Angry Birds rating
+    const starSize = 20
+    const spacing = 25
+    const startX = x - (spacing * (count - 1) / 2)
+
+    for (let i = 0; i < count; i++) {
+      const star = this.add.graphics()
+      star.fillStyle(0xFFD700, 1)
+      star.fillStar(0, 0, 5, starSize / 2, starSize, 0)
+      star.x = startX + (i * spacing)
+      star.y = y - 40
+      star.setAlpha(0)
+      star.setScale(0)
+      star.setDepth(10)
+
+      // Glow effect
+      star.lineStyle(3, 0xFFFFAA, 0.8)
+      star.strokeStar(0, 0, 5, starSize / 2, starSize, 0)
+
+      this.tweens.add({
+        targets: star,
+        scale: 1.5,
+        alpha: 1,
+        duration: 300,
+        delay: i * 100,
+        ease: 'Back.easeOut',
+        onComplete: () => {
+          this.tweens.add({
+            targets: star,
+            y: y - 80,
+            alpha: 0,
+            duration: 800,
+            delay: 400,
+            onComplete: () => star.destroy()
+          })
+        }
+      })
+    }
+
+    // Show star text
+    const starText = this.add.text(x, y - 70, `★ ${count} STAR${count > 1 ? 'S' : ''}! ★`, {
+      fontSize: '24px',
+      fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
+      color: '#FFD700',
+      stroke: '#000000',
+      strokeThickness: 4
+    }).setOrigin(0.5).setAlpha(0).setDepth(10)
+
+    this.tweens.add({
+      targets: starText,
+      alpha: 1,
+      y: y - 90,
+      duration: 600,
+      ease: 'Cubic.easeOut',
+      onComplete: () => {
+        this.tweens.add({
+          targets: starText,
+          alpha: 0,
+          duration: 400,
+          delay: 400,
+          onComplete: () => starText.destroy()
+        })
+      }
+    })
   }
 
   showPerfectThrow() {
@@ -1330,9 +1651,18 @@ class GameScene extends Phaser.Scene {
     // Create splash effect
     this.createSplash(laundry.x, 600)
 
-    // Remove laundry and shadow
-    if (laundry.shadow) laundry.shadow.destroy()
-    laundry.destroy()
+    // Remove laundry and shadow safely
+    try {
+      if (laundry && laundry.shadow && laundry.shadow.scene) {
+        laundry.shadow.destroy()
+      }
+      if (laundry && laundry.scene) {
+        laundry.destroy()
+      }
+    } catch (error) {
+      console.log('Error cleaning up laundry:', error)
+    }
+
     this.laundryInFlight = null
 
     // COMBO BREAKER!
@@ -1400,10 +1730,11 @@ class GameScene extends Phaser.Scene {
 
     const instructions = [
       '👆 TAP & HOLD to charge power',
-      '🎯 AIM for the washing line',
-      '💨 Watch the WIND direction',
-      '⭐ Land near CENTER for PERFECT',
-      '🔥 Build COMBOS for bonus points',
+      '⬆️ FLICK UP to launch pants!',
+      '💨 Watch WIND intensity (changes!)',
+      '🎯 Throw when wind is LOW',
+      '⭐ Land NEAR CENTER for 3 stars',
+      '🔥 Build COMBOS for bonuses',
       '❤️ Don\'t hit the pool 3 times!',
       '',
       'TAP TO START!'
