@@ -2394,8 +2394,8 @@ class TitleScene extends Phaser.Scene {
       })
     }
 
-    // PLAY BUTTON - Professional 3D button
-    const buttonY = 480
+    // PLAY BUTTON - Professional 3D button (moved down to avoid high score overlap)
+    const buttonY = 520
     const button = this.add.graphics()
 
     // Deep shadow layer
@@ -2489,8 +2489,8 @@ class TitleScene extends Phaser.Scene {
     })
 
     // Credits at bottom
-    this.add.text(180, 680, 'Made with love for Uncle Paul', {
-      fontSize: '14px',
+    this.add.text(180, 680, 'No laundry was harmed in the making of this game', {
+      fontSize: '13px',
       fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
       color: '#AAAAAA',
       align: 'center'
