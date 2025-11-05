@@ -872,14 +872,14 @@ class GameScene extends Phaser.Scene {
     // Wind intensity meter
     this.windMeter = this.add.graphics()
 
-    // Stars display
-    this.starsText = this.add.text(180, 20, '', {
-      fontSize: '24px',
+    // Stars display (moved to avoid overlap with level text)
+    this.starsText = this.add.text(360, 90, '', {
+      fontSize: '20px',
       fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
       color: '#FFD700',
       stroke: '#000000',
-      strokeThickness: 4
-    }).setOrigin(0.5, 0)
+      strokeThickness: 3
+    }).setOrigin(1, 0)
 
     // Perfect throw indicator (hidden)
     this.perfectText = this.add.text(180, 280, 'PERFECT!', {
