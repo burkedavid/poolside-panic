@@ -1,18 +1,20 @@
 {
   "name": "uncle-pauls-poolside-panic",
   "version": "1.0.0",
-  "description": "A mobile-first Phaser 3 game about hanging laundry while battling wind gusts",
+  "description": "A fun mobile game where you hang laundry while avoiding Uncle Paul's pool",
   "main": "index.html",
   "scripts": {
-    "dev": "python3 -m http.server 8000",
-    "preview": "python3 -m http.server 8000"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
-  "keywords": [
-    "phaser3",
-    "game",
-    "mobile",
-    "browser-game"
-  ],
+  "keywords": ["game", "phaser", "mobile", "casual"],
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "vite": "^5.0.0"
+  },
+  "dependencies": {
+    "phaser": "^3.80.1"
+  }
 }
