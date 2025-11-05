@@ -533,37 +533,20 @@ class GameScene extends Phaser.Scene {
     shadow.fillStyle(0x000000, 0.3)
     shadow.fillEllipse(0, 95, 50, 15)
 
-    // Legs with realistic shading (skin tone)
+    // Legs (clean skin tone)
     const leftLeg = this.add.graphics()
-
-    // Left leg gradient
-    for (let i = 0; i < 45; i++) {
-      const color = Phaser.Display.Color.Interpolate.ColorWithColor(
-        { r: 255, g: 219, b: 172 },  // Light skin
-        { r: 230, g: 190, b: 150 },  // Darker skin
-        45, i
-      )
-      leftLeg.fillStyle(Phaser.Display.Color.GetColor(color.r, color.g, color.b), 1)
-      leftLeg.fillRect(-15, 50 + i, 13, 1)
-    }
-    // Leg shading
-    leftLeg.fillStyle(0x000000, 0.15)
+    leftLeg.fillStyle(0xFFDBAC, 1)
+    leftLeg.fillRoundedRect(-15, 50, 13, 45, 3)
+    // Subtle shading on left
+    leftLeg.fillStyle(0x000000, 0.08)
     leftLeg.fillRect(-15, 50, 3, 45)
 
     const rightLeg = this.add.graphics()
-    // Right leg gradient
-    for (let i = 0; i < 45; i++) {
-      const color = Phaser.Display.Color.Interpolate.ColorWithColor(
-        { r: 255, g: 219, b: 172 },
-        { r: 230, g: 190, b: 150 },
-        45, i
-      )
-      rightLeg.fillStyle(Phaser.Display.Color.GetColor(color.r, color.g, color.b), 1)
-      rightLeg.fillRect(3, 50 + i, 13, 1)
-    }
-    // Highlight on right leg
-    rightLeg.fillStyle(0xFFFFFF, 0.2)
-    rightLeg.fillRect(10, 50, 3, 45)
+    rightLeg.fillStyle(0xFFDBAC, 1)
+    rightLeg.fillRoundedRect(3, 50, 13, 45, 3)
+    // Subtle highlight on right
+    rightLeg.fillStyle(0xFFFFFF, 0.1)
+    rightLeg.fillRect(13, 50, 3, 45)
 
     // Feet with sandals
     const feet = this.add.graphics()
@@ -574,46 +557,28 @@ class GameScene extends Phaser.Scene {
     feet.fillRect(-12, 92, 5, 3)
     feet.fillRect(7, 92, 5, 3)
 
-    // Shorts with realistic fabric texture
+    // Shorts (clean blue)
     const shorts = this.add.graphics()
+    shorts.fillStyle(0x4169E1, 1)
+    shorts.fillRoundedRect(-22, 20, 44, 32, 3)
 
-    // Shorts gradient (royal blue)
-    for (let i = 0; i < 32; i++) {
-      const color = Phaser.Display.Color.Interpolate.ColorWithColor(
-        { r: 65, g: 105, b: 225 },   // Lighter blue
-        { r: 40, g: 70, b: 180 },    // Darker blue
-        32, i
-      )
-      shorts.fillStyle(Phaser.Display.Color.GetColor(color.r, color.g, color.b), 1)
-      shorts.fillRoundedRect(-22, 20 + i, 44, 1, 3)
-    }
-
-    // Shorts shadows and highlights
-    shorts.fillStyle(0x000000, 0.2)
-    shorts.fillRect(-22, 20, 8, 32)  // Left shadow
-    shorts.fillStyle(0xFFFFFF, 0.15)
-    shorts.fillRect(14, 20, 8, 32)   // Right highlight
+    // Shorts shading
+    shorts.fillStyle(0x000000, 0.1)
+    shorts.fillRect(-22, 20, 8, 32)
+    shorts.fillStyle(0xFFFFFF, 0.1)
+    shorts.fillRect(14, 20, 8, 32)
 
     // Waistband
     shorts.fillStyle(0x2F4F8F, 1)
     shorts.fillRect(-22, 20, 44, 4)
 
-    // Body/Shirt (bright tropical yellow)
+    // Shirt (bright yellow)
     const shirt = this.add.graphics()
+    shirt.fillStyle(0xFFDC00, 1)
+    shirt.fillEllipse(0, 0, 52, 60)
 
-    // Shirt body with gradient
-    for (let i = 0; i < 60; i++) {
-      const color = Phaser.Display.Color.Interpolate.ColorWithColor(
-        { r: 255, g: 220, b: 0 },    // Bright yellow
-        { r: 255, g: 200, b: 0 },    // Slightly darker
-        60, i
-      )
-      shirt.fillStyle(Phaser.Display.Color.GetColor(color.r, color.g, color.b), 1)
-      shirt.fillEllipse(0, -30 + i, 52, 1)
-    }
-
-    // Shirt collar (Hawaiian style)
-    shirt.fillStyle(0xFFD700, 1)
+    // Shirt collar (V-neck)
+    shirt.fillStyle(0xFFDC00, 1)
     shirt.beginPath()
     shirt.moveTo(-15, -50)
     shirt.lineTo(-8, -40)
@@ -636,186 +601,129 @@ class GameScene extends Phaser.Scene {
     shirt.fillCircle(-15, -10, 3)
     shirt.fillCircle(12, 5, 3)
 
-    // Shirt shading
-    shirt.fillStyle(0x000000, 0.15)
-    shirt.fillEllipse(-18, 0, 15, 50)
+    // Subtle shirt shading
+    shirt.fillStyle(0x000000, 0.08)
+    shirt.fillEllipse(-18, 0, 12, 50)
 
-    // Arms with realistic shading
+    // Arms (clean skin tone)
     const leftArm = this.add.graphics()
-    for (let i = 0; i < 55; i++) {
-      const color = Phaser.Display.Color.Interpolate.ColorWithColor(
-        { r: 255, g: 219, b: 172 },
-        { r: 230, g: 190, b: 150 },
-        55, i
-      )
-      leftArm.fillStyle(Phaser.Display.Color.GetColor(color.r, color.g, color.b), 1)
-      leftArm.fillEllipse(-28, -25 + i, 12, 1)
-    }
-    leftArm.fillStyle(0x000000, 0.2)
-    leftArm.fillEllipse(-32, 0, 8, 50)
+    leftArm.fillStyle(0xFFDBAC, 1)
+    leftArm.fillEllipse(-28, 0, 12, 55)
+    leftArm.fillStyle(0x000000, 0.08)
+    leftArm.fillEllipse(-32, 0, 6, 50)
 
     const rightArm = this.add.graphics()
-    for (let i = 0; i < 55; i++) {
-      const color = Phaser.Display.Color.Interpolate.ColorWithColor(
-        { r: 255, g: 219, b: 172 },
-        { r: 230, g: 190, b: 150 },
-        55, i
-      )
-      rightArm.fillStyle(Phaser.Display.Color.GetColor(color.r, color.g, color.b), 1)
-      rightArm.fillEllipse(28, -25 + i, 12, 1)
-    }
-    rightArm.fillStyle(0xFFFFFF, 0.2)
-    rightArm.fillEllipse(32, 0, 8, 50)
+    rightArm.fillStyle(0xFFDBAC, 1)
+    rightArm.fillEllipse(28, 0, 12, 55)
+    rightArm.fillStyle(0xFFFFFF, 0.1)
+    rightArm.fillEllipse(32, 0, 6, 50)
 
     // Hands
     const hands = this.add.graphics()
     hands.fillStyle(0xFFDBAC, 1)
     hands.fillCircle(-28, 28, 7)
     hands.fillCircle(28, 28, 7)
-    // Fingers suggestion
-    hands.fillStyle(0xFFDBAC, 0.8)
-    hands.fillRect(-30, 33, 3, 5)
-    hands.fillRect(27, 33, 3, 5)
 
-    // Head with photorealistic skin gradient - YOUNG GUY IN 20s
+    // Head - CLEAN AND SIMPLE!
     const head = this.add.graphics()
 
-    // Ultra-realistic head sphere with proper lighting
-    const headRadius = 28
-    for (let angle = 0; angle < Math.PI * 2; angle += 0.1) {
-      for (let radius = 0; radius < headRadius; radius += 1) {
-        const lightAngle = Math.PI * 0.75 // Light from top-left
-        const normalAngle = Math.atan2(Math.sin(angle) * radius, Math.cos(angle) * radius)
-        const lightIntensity = Math.max(0, Math.cos(normalAngle - lightAngle)) * 0.3
+    // Neck
+    head.fillStyle(0xFFDBAC, 1)
+    head.fillRect(-8, -42, 16, 15)
 
-        const baseR = 255
-        const baseG = 220
-        const baseB = 185
+    // Main head shape - clean, solid color
+    head.fillStyle(0xFFDBAC, 1)
+    head.fillCircle(0, -60, 28)
 
-        const r = Math.floor(baseR - (1 - lightIntensity) * 30)
-        const g = Math.floor(baseG - (1 - lightIntensity) * 35)
-        const b = Math.floor(baseB - (1 - lightIntensity) * 40)
+    // Simple cheek shading for depth
+    head.fillStyle(0xFFB6C1, 0.3)
+    head.fillCircle(-12, -55, 8)
+    head.fillCircle(12, -55, 8)
 
-        head.fillStyle(Phaser.Display.Color.GetColor(r, g, b), 1)
-        head.fillCircle(
-          Math.cos(angle) * radius,
-          -60 + Math.sin(angle) * radius,
-          1.5
-        )
-      }
-    }
+    // Ears - simple and clean
+    head.fillStyle(0xFFDBAC, 1)
+    head.fillEllipse(-26, -58, 10, 14)
+    head.fillEllipse(26, -58, 10, 14)
 
-    // Realistic ears with depth and detail
-    head.fillStyle(0xFFD5B0, 1)
-    head.fillEllipse(-24, -58, 10, 15)
-    head.fillEllipse(24, -58, 10, 15)
-
-    // Ear shadows
-    head.fillStyle(0x000000, 0.15)
-    head.fillEllipse(-26, -58, 6, 12)
-    head.fillEllipse(22, -58, 6, 12)
-
-    // Inner ear detail
+    // Inner ear detail (minimal)
     head.fillStyle(0xE6BEAA, 1)
-    head.fillEllipse(-24, -58, 5, 8)
-    head.fillEllipse(24, -58, 5, 8)
-    head.fillStyle(0xD4A088, 1)
-    head.fillEllipse(-25, -59, 3, 5)
-    head.fillEllipse(23, -59, 3, 5)
+    head.fillEllipse(-26, -58, 5, 8)
+    head.fillEllipse(26, -58, 5, 8)
 
-    // Modern full hair - dark brown, thick and stylish (20s style)
-    head.fillStyle(0x3d2817, 1)
+    // Hair - CLEAN, DEFINED, MODERN
+    head.fillStyle(0x4A2511, 1)
 
-    // Full hair coverage - no bald spot!
-    head.fillCircle(0, -75, 26)
+    // Back/top of hair - solid, clean shape
+    head.fillEllipse(0, -78, 30, 22)
 
-    // Hair volume and texture - modern messy style
-    for (let i = 0; i < 16; i++) {
-      const angle = (i / 16) * Math.PI * 2 - Math.PI / 2
-      const x = Math.cos(angle) * 24
-      const y = -75 + Math.sin(angle) * 18
-      head.fillEllipse(x, y, 10, 14)
-    }
+    // Side hair (defined edges)
+    head.fillEllipse(-18, -72, 14, 18)
+    head.fillEllipse(18, -72, 14, 18)
 
-    // Hair highlights for depth (modern styled look)
-    head.fillStyle(0x5a3d2a, 0.7)
-    for (let i = 0; i < 8; i++) {
-      const angle = (i / 8) * Math.PI - Math.PI / 2
-      const x = Math.cos(angle) * 20
-      const y = -78 + Math.sin(angle) * 12
-      head.fillEllipse(x, y, 8, 10)
-    }
+    // Front hair sweep - clean, styled
+    head.fillEllipse(0, -85, 24, 12)
+    head.fillEllipse(10, -88, 16, 10)
 
-    // Front hair sweep (trendy)
-    head.fillStyle(0x3d2817, 1)
-    head.fillEllipse(8, -82, 16, 12)
-    head.fillEllipse(-5, -84, 14, 10)
+    // Hair highlight for dimension (subtle)
+    head.fillStyle(0x6B3410, 0.6)
+    head.fillEllipse(6, -82, 18, 10)
 
-    // Eyebrows - younger, more defined
-    head.fillStyle(0x3d2817, 1)
-    head.fillEllipse(-11, -65, 10, 3)
-    head.fillEllipse(11, -65, 10, 3)
+    // Eyebrows - clean, natural
+    head.fillStyle(0x4A2511, 1)
+    head.fillEllipse(-12, -67, 10, 3)
+    head.fillEllipse(12, -67, 10, 3)
 
-    // Eyes - bright and youthful (no sunglasses!)
+    // Eyes - WHITE BACKGROUND (NO DARK MASK!)
     head.fillStyle(0xFFFFFF, 1)
-    head.fillEllipse(-11, -60, 10, 8)
-    head.fillEllipse(11, -60, 10, 8)
+    head.fillEllipse(-12, -60, 10, 8)
+    head.fillEllipse(12, -60, 10, 8)
 
-    // Irises - friendly brown eyes
+    // Irises - friendly brown
     head.fillStyle(0x6B4423, 1)
-    head.fillCircle(-11, -60, 4)
-    head.fillCircle(11, -60, 4)
+    head.fillCircle(-12, -60, 4)
+    head.fillCircle(12, -60, 4)
 
     // Pupils
     head.fillStyle(0x000000, 1)
-    head.fillCircle(-11, -60, 2.5)
-    head.fillCircle(11, -60, 2.5)
+    head.fillCircle(-12, -60, 2.5)
+    head.fillCircle(12, -60, 2.5)
 
-    // Eye shine (youthful sparkle)
+    // Eye sparkle
     head.fillStyle(0xFFFFFF, 0.9)
-    head.fillCircle(-10, -61, 1.5)
-    head.fillCircle(12, -61, 1.5)
+    head.fillCircle(-11, -61, 1.5)
+    head.fillCircle(13, -61, 1.5)
 
-    // Upper eyelids
-    head.lineStyle(2, 0x3d2817, 1)
+    // Simple eyelids (thin lines)
+    head.lineStyle(2, 0x4A2511, 1)
     head.beginPath()
-    head.arc(-11, -60, 5, -Math.PI, 0, true)
+    head.arc(-12, -60, 5, -Math.PI, 0, true)
     head.strokePath()
     head.beginPath()
-    head.arc(11, -60, 5, -Math.PI, 0, true)
+    head.arc(12, -60, 5, -Math.PI, 0, true)
     head.strokePath()
 
-    // Nose - smaller, youthful
-    head.fillStyle(0xFFDBAC, 1)
-    head.fillEllipse(2, -52, 8, 12)
-    head.fillStyle(0xE6BEAA, 0.4)
-    head.fillEllipse(0, -52, 5, 8)
-    // Nostrils - subtle
+    // Nose - simple and clean
+    head.fillStyle(0xFFB6C1, 0.4)
+    head.fillEllipse(0, -52, 8, 10)
+
+    // Nostrils (subtle)
     head.fillStyle(0x000000, 0.3)
     head.fillCircle(-2, -48, 1.5)
-    head.fillCircle(4, -48, 1.5)
+    head.fillCircle(2, -48, 1.5)
 
-    // Friendly smile - young and fun
+    // Friendly smile
     head.lineStyle(3, 0x8B4513, 1)
     head.beginPath()
-    head.arc(0, -42, 12, 0.2, Math.PI - 0.2, false)
+    head.arc(0, -44, 12, 0.2, Math.PI - 0.2, false)
     head.strokePath()
 
-    // Teeth - bright and healthy
+    // Teeth
     head.fillStyle(0xFFFFFF, 1)
     head.beginPath()
-    head.arc(0, -42, 11, 0.3, Math.PI - 0.3, false)
-    head.lineTo(-8, -42)
+    head.arc(0, -44, 11, 0.3, Math.PI - 0.3, false)
+    head.lineTo(-8, -44)
     head.closePath()
     head.fillPath()
-
-    // No mustache! Clean shaven for 20s look
-
-    // Subtle jawline definition (youthful structure)
-    head.lineStyle(1, 0xE6BEAA, 0.5)
-    head.beginPath()
-    head.arc(0, -50, 22, 0.8, Math.PI - 0.8, false)
-    head.strokePath()
 
     // Add all parts to container (order matters for layering)
     unclePaul.add([shadow, feet, leftLeg, rightLeg, shorts, leftArm, shirt, rightArm, hands, head])
@@ -1728,12 +1636,26 @@ class GameScene extends Phaser.Scene {
   }
 
   createSuccessParticles(x, y) {
-    // Sparkle particles
+    // Sparkle particles - using circles and diamonds (no fillStar!)
     for (let i = 0; i < 12; i++) {
       const angle = (i / 12) * Math.PI * 2
       const particle = this.add.graphics()
       particle.fillStyle(0xFFD700, 1)
-      particle.fillStar(0, 0, 5, 4, 8, 0)
+
+      // Alternate between circles and diamonds for variety
+      if (i % 2 === 0) {
+        particle.fillCircle(0, 0, 4)
+      } else {
+        // Diamond shape
+        particle.beginPath()
+        particle.moveTo(0, -6)
+        particle.lineTo(4, 0)
+        particle.lineTo(0, 6)
+        particle.lineTo(-4, 0)
+        particle.closePath()
+        particle.fillPath()
+      }
+
       particle.x = x
       particle.y = y
 
