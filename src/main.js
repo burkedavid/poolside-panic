@@ -2234,40 +2234,40 @@ class TitleScene extends Phaser.Scene {
       wall.fillRect(0, 200 + i, 360, 1)
     }
 
-    // TITLE LOGO - Professional 3D depth with multiple layers
+    // TITLE LOGO - Professional 3D depth with multiple layers (sized to fit 360px screen)
     // Deep shadow layer
     const titleDeepShadow = this.add.text(180, 258, "UNCLE PAUL'S", {
-      fontSize: '48px',
-      fontFamily: 'Arial Black, Arial, Helvetica, sans-serif',
-      color: '#000000',
-      stroke: '#000000',
-      strokeThickness: 12,
-      fontStyle: 'bold'
-    }).setOrigin(0.5).setAlpha(0.4)
-
-    // Mid shadow layer
-    const titleMidShadow = this.add.text(180, 254, "UNCLE PAUL'S", {
-      fontSize: '48px',
+      fontSize: '40px',
       fontFamily: 'Arial Black, Arial, Helvetica, sans-serif',
       color: '#000000',
       stroke: '#000000',
       strokeThickness: 10,
       fontStyle: 'bold'
+    }).setOrigin(0.5).setAlpha(0.4)
+
+    // Mid shadow layer
+    const titleMidShadow = this.add.text(180, 254, "UNCLE PAUL'S", {
+      fontSize: '40px',
+      fontFamily: 'Arial Black, Arial, Helvetica, sans-serif',
+      color: '#000000',
+      stroke: '#000000',
+      strokeThickness: 8,
+      fontStyle: 'bold'
     }).setOrigin(0.5).setAlpha(0.6)
 
     // Main title
     const title = this.add.text(180, 250, "UNCLE PAUL'S", {
-      fontSize: '48px',
+      fontSize: '40px',
       fontFamily: 'Arial Black, Arial, Helvetica, sans-serif',
       color: '#FFD700',
       stroke: '#FF8C00',
-      strokeThickness: 8,
+      strokeThickness: 7,
       fontStyle: 'bold'
     }).setOrigin(0.5)
 
     // Inner highlight
     const titleHighlight = this.add.text(180, 248, "UNCLE PAUL'S", {
-      fontSize: '48px',
+      fontSize: '40px',
       fontFamily: 'Arial Black, Arial, Helvetica, sans-serif',
       color: '#FFEB99',
       stroke: '#FFE066',
@@ -2275,40 +2275,40 @@ class TitleScene extends Phaser.Scene {
       fontStyle: 'bold'
     }).setOrigin(0.5).setAlpha(0.7)
 
-    // SUBTITLE - Professional 3D depth
+    // SUBTITLE - Professional 3D depth (sized to fit)
     // Deep shadow layer
     const subtitleDeepShadow = this.add.text(180, 308, 'POOLSIDE PANIC', {
-      fontSize: '42px',
-      fontFamily: 'Arial Black, Arial, Helvetica, sans-serif',
-      color: '#000000',
-      stroke: '#000000',
-      strokeThickness: 12,
-      fontStyle: 'bold'
-    }).setOrigin(0.5).setAlpha(0.4)
-
-    // Mid shadow layer
-    const subtitleMidShadow = this.add.text(180, 304, 'POOLSIDE PANIC', {
-      fontSize: '42px',
+      fontSize: '34px',
       fontFamily: 'Arial Black, Arial, Helvetica, sans-serif',
       color: '#000000',
       stroke: '#000000',
       strokeThickness: 10,
       fontStyle: 'bold'
+    }).setOrigin(0.5).setAlpha(0.4)
+
+    // Mid shadow layer
+    const subtitleMidShadow = this.add.text(180, 304, 'POOLSIDE PANIC', {
+      fontSize: '34px',
+      fontFamily: 'Arial Black, Arial, Helvetica, sans-serif',
+      color: '#000000',
+      stroke: '#000000',
+      strokeThickness: 8,
+      fontStyle: 'bold'
     }).setOrigin(0.5).setAlpha(0.6)
 
     // Main subtitle
     const subtitle = this.add.text(180, 300, 'POOLSIDE PANIC', {
-      fontSize: '42px',
+      fontSize: '34px',
       fontFamily: 'Arial Black, Arial, Helvetica, sans-serif',
       color: '#00BFFF',
       stroke: '#0066CC',
-      strokeThickness: 8,
+      strokeThickness: 7,
       fontStyle: 'bold'
     }).setOrigin(0.5)
 
     // Inner highlight
     const subtitleHighlight = this.add.text(180, 298, 'POOLSIDE PANIC', {
-      fontSize: '42px',
+      fontSize: '34px',
       fontFamily: 'Arial Black, Arial, Helvetica, sans-serif',
       color: '#99E6FF',
       stroke: '#66D4FF',
