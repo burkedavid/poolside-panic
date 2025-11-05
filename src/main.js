@@ -1610,47 +1610,38 @@ class GameScene extends Phaser.Scene {
   }
 
   showStars(x, y, count) {
-    // Show stars like Angry Birds rating
-    const starSize = 20
-    const spacing = 25
-    const startX = x - (spacing * (count - 1) / 2)
+    // Show stars like Angry Birds rating - using text emojis (simpler and works!)
+    const starEmoji = '⭐'
+    const stars = starEmoji.repeat(count)
 
-    for (let i = 0; i < count; i++) {
-      const star = this.add.graphics()
-      star.fillStyle(0xFFD700, 1)
-      star.fillStar(0, 0, 5, starSize / 2, starSize, 0)
-      star.x = startX + (i * spacing)
-      star.y = y - 40
-      star.setAlpha(0)
-      star.setScale(0)
-      star.setDepth(10)
+    // Big animated star display
+    const starText = this.add.text(x, y - 50, stars, {
+      fontSize: '40px',
+      fontFamily: 'Arial'
+    }).setOrigin(0.5).setAlpha(0).setScale(0.5).setDepth(10)
 
-      // Glow effect
-      star.lineStyle(3, 0xFFFFAA, 0.8)
-      star.strokeStar(0, 0, 5, starSize / 2, starSize, 0)
+    this.tweens.add({
+      targets: starText,
+      scale: 1.3,
+      alpha: 1,
+      duration: 400,
+      ease: 'Back.easeOut',
+      onComplete: () => {
+        this.tweens.add({
+          targets: starText,
+          y: y - 80,
+          alpha: 0,
+          scale: 0.8,
+          duration: 800,
+          delay: 600,
+          ease: 'Cubic.easeIn',
+          onComplete: () => starText.destroy()
+        })
+      }
+    })
 
-      this.tweens.add({
-        targets: star,
-        scale: 1.5,
-        alpha: 1,
-        duration: 300,
-        delay: i * 100,
-        ease: 'Back.easeOut',
-        onComplete: () => {
-          this.tweens.add({
-            targets: star,
-            y: y - 80,
-            alpha: 0,
-            duration: 800,
-            delay: 400,
-            onComplete: () => star.destroy()
-          })
-        }
-      })
-    }
-
-    // Show star text
-    const starText = this.add.text(x, y - 70, `★ ${count} STAR${count > 1 ? 'S' : ''}! ★`, {
+    // Show star rating text
+    const ratingText = this.add.text(x, y - 90, `${count} STAR${count > 1 ? 'S' : ''}!`, {
       fontSize: '24px',
       fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
       color: '#FFD700',
@@ -1659,18 +1650,19 @@ class GameScene extends Phaser.Scene {
     }).setOrigin(0.5).setAlpha(0).setDepth(10)
 
     this.tweens.add({
-      targets: starText,
+      targets: ratingText,
       alpha: 1,
-      y: y - 90,
-      duration: 600,
+      y: y - 110,
+      duration: 500,
+      delay: 200,
       ease: 'Cubic.easeOut',
       onComplete: () => {
         this.tweens.add({
-          targets: starText,
+          targets: ratingText,
           alpha: 0,
           duration: 400,
-          delay: 400,
-          onComplete: () => starText.destroy()
+          delay: 600,
+          onComplete: () => ratingText.destroy()
         })
       }
     })
