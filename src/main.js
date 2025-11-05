@@ -10,13 +10,17 @@ class GameScene extends Phaser.Scene {
     // Game state
     this.score = 0
     this.strikes = 3
-    this.windSpeed = 8
+    this.level = 1 // Level system!
+    this.itemsOnLine = 0 // Track items on washing line
+    this.maxItemsPerLevel = 5 // Items needed to level up
+    this.windSpeed = 2 // Start with VERY low wind!
     this.windDirection = 1 // 1 = right, -1 = left
-    this.windIntensity = 0.5 // 0 to 1 for dynamic wind
+    this.windIntensity = 0.3 // Start LOW for beginners
     this.isPowering = false
     this.power = 0
     this.laundryInFlight = null
     this.successfulHangs = 0
+    this.hangedItems = [] // Track items on line for level system
 
     // Flick mechanic variables
     this.flickStartY = 0
@@ -67,27 +71,38 @@ class GameScene extends Phaser.Scene {
   }
 
   startDynamicWind() {
-    // Wind oscillates naturally like real weather - ALWAYS has a sweet spot!
+    // Wind oscillates naturally like real weather - STARTS SUPER EASY!
     this.time.addEvent({
       delay: 100,
       callback: () => {
-        // Wind intensity oscillates smoothly between 0.15 and 0.95
-        // Slower oscillation (3000ms) gives players time to wait for sweet spot
-        this.windIntensity = 0.55 + Math.sin(this.time.now / 3000) * 0.4
+        // Level-based wind system - gets harder as you level up
+        const levelDifficulty = (this.level - 1) * 0.15 // Increases by 0.15 per level
 
-        // Occasionally change wind direction (less frequent for fairness)
-        if (Phaser.Math.Between(0, 300) === 0) {
+        // Wind intensity oscillates smoothly - range grows with level
+        // Level 1: 0.1 to 0.5 (SUPER EASY!)
+        // Level 2: 0.25 to 0.65
+        // Level 3: 0.4 to 0.8, etc.
+        const minIntensity = Math.min(0.1 + levelDifficulty, 0.6)
+        const maxIntensity = Math.min(0.5 + levelDifficulty, 0.95)
+        const range = (maxIntensity - minIntensity) / 2
+        const center = minIntensity + range
+
+        // Slower oscillation for Level 1, faster as you progress
+        const oscillationSpeed = 3500 - (this.level * 200) // Slows down as levels increase
+        this.windIntensity = center + Math.sin(this.time.now / oscillationSpeed) * range
+
+        // Direction changes based on level (more frequent at higher levels)
+        const directionChance = Math.max(400 - (this.level * 30), 200)
+        if (Phaser.Math.Between(0, directionChance) === 0) {
           this.windDirection = -this.windDirection
           this.showWindGust()
         }
 
-        // Calculate current wind speed based on intensity and progression
-        // Starts easier, gradually gets harder but ALWAYS has low wind moments
-        const progressionWind = Math.floor(this.successfulHangs / 5) * 2
-        const baseWind = 3 + progressionWind // Starts at 3, increases by 2 every 5 hangs
-        const maxAdditionalWind = 12 + progressionWind // Scales with progression
+        // Level-based wind speed
+        const baseWind = Math.max(1, 0.5 + (this.level * 1.5)) // Very low at start!
+        const additionalWind = 4 + (this.level * 2) // Scales with level
 
-        this.windSpeed = baseWind + (this.windIntensity * maxAdditionalWind)
+        this.windSpeed = baseWind + (this.windIntensity * additionalWind)
 
         this.updateWindDisplay()
       },
@@ -833,8 +848,8 @@ class GameScene extends Phaser.Scene {
     line.lineStyle(4, 0x696969, 1)
     line.lineBetween(55, 280, 310, 280)
 
-    // Create collision zone for the washing line (generous zone for fun gameplay!)
-    this.washingLineZone = this.add.zone(180, 280, 260, 80)
+    // Create collision zone for the washing line (HUGE zone for easy start!)
+    this.washingLineZone = this.add.zone(180, 280, 280, 100)
     this.physics.add.existing(this.washingLineZone, true)
 
     // Pegs on the line
@@ -894,6 +909,24 @@ class GameScene extends Phaser.Scene {
       stroke: '#000000',
       strokeThickness: 3
     })
+
+    // Level display (prominent!)
+    this.levelText = this.add.text(180, 20, 'LEVEL 1', {
+      fontSize: '32px',
+      fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
+      color: '#00FF00',
+      stroke: '#000000',
+      strokeThickness: 5
+    }).setOrigin(0.5, 0)
+
+    // Items on line counter
+    this.itemsOnLineText = this.add.text(180, 55, '0/5 on line', {
+      fontSize: '18px',
+      fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
+      color: '#FFFFFF',
+      stroke: '#000000',
+      strokeThickness: 3
+    }).setOrigin(0.5, 0)
 
     // Hearts/Strikes
     this.heartsText = this.add.text(360, 20, '❤️❤️❤️', {
@@ -1157,13 +1190,16 @@ class GameScene extends Phaser.Scene {
 
     this.physics.add.existing(laundry)
 
-    // Advanced physics based on flick gesture and wind
+    // Advanced physics based on flick gesture and wind - EASIER AT START!
     const powerFactor = this.power / 100
-    const flickBonus = flickSpeed * 180 // Slightly reduced for better control
+    const flickBonus = flickSpeed * 160 // Reduced for better control
+
+    // Level-based difficulty (easier at level 1)
+    const levelMultiplier = 0.85 + (this.level * 0.05) // Starts at 85% power, increases 5% per level
 
     // Base velocity from power and flick
-    const baseVelocityX = (powerFactor * 200) + (Math.cos(flickAngle) * flickBonus)
-    const baseVelocityY = -(powerFactor * 450) - (Math.sin(flickAngle) * flickBonus) - 180
+    const baseVelocityX = ((powerFactor * 180) + (Math.cos(flickAngle) * flickBonus)) * levelMultiplier
+    const baseVelocityY = (-(powerFactor * 420) - (Math.sin(flickAngle) * flickBonus) - 160) * levelMultiplier
 
     // Over-flicking physics - too much power makes it fly way up and spin down!
     let verticalMultiplier = 1
@@ -1325,9 +1361,13 @@ class GameScene extends Phaser.Scene {
   }
 
   onSuccessfulHang(laundry) {
-    // Stop the laundry
+    // Prevent double-triggering
+    if (!laundry || !laundry.body) return
+
+    // Stop the laundry immediately
     laundry.body.setVelocity(0, 0)
     laundry.body.setAngularVelocity(0)
+    laundry.body.setImmovable(true)
 
     // Snap to line
     laundry.y = 290
@@ -1335,8 +1375,8 @@ class GameScene extends Phaser.Scene {
     // Calculate performance metrics for star rating
     const lineCenter = 180
     const distanceFromCenter = Math.abs(laundry.x - lineCenter)
-    const perfectRange = 30
-    const goodRange = 60
+    const perfectRange = 40
+    const goodRange = 80
 
     const isPerfect = distanceFromCenter < perfectRange
     const isGood = distanceFromCenter < goodRange
@@ -1348,20 +1388,26 @@ class GameScene extends Phaser.Scene {
       this.perfectThrows++
       this.showPerfectThrow()
 
-      // SLOW MOTION EFFECT for perfect throws!
-      this.time.timeScale = 0.3
-      this.time.delayedCall(800, () => {
-        this.time.timeScale = 1
-      })
+      // SLOW MOTION EFFECT for perfect throws (only if time scale is normal)
+      if (this.time.timeScale === 1) {
+        this.time.timeScale = 0.4
+        this.time.delayedCall(600, () => {
+          if (this.time && this.time.timeScale < 1) {
+            this.time.timeScale = 1
+          }
+        })
+      }
 
       // Epic camera zoom
-      this.cameras.main.zoom = 1.15
-      this.tweens.add({
-        targets: this.cameras.main,
-        zoom: 1,
-        duration: 1000,
-        ease: 'Cubic.easeOut'
-      })
+      if (this.cameras.main.zoom === 1) {
+        this.cameras.main.zoom = 1.12
+        this.tweens.add({
+          targets: this.cameras.main,
+          zoom: 1,
+          duration: 800,
+          ease: 'Cubic.easeOut'
+        })
+      }
     } else if (isGood) {
       starsEarned = 2
     }
@@ -1405,6 +1451,16 @@ class GameScene extends Phaser.Scene {
 
     this.successfulHangs++
 
+    // Track items on line and check for level up!
+    this.itemsOnLine++
+    this.hangedItems.push(laundry) // Keep reference for level animation
+    this.itemsOnLineText.setText(`${this.itemsOnLine}/${this.maxItemsPerLevel} on line`)
+
+    // LEVEL UP when line is full!
+    if (this.itemsOnLine >= this.maxItemsPerLevel) {
+      this.levelUp()
+    }
+
     // Celebrate with increasing intensity
     this.celebrateUnclePaul()
 
@@ -1420,9 +1476,8 @@ class GameScene extends Phaser.Scene {
       this.cameras.main.shake(200, 0.005)
     }
 
-    // Update wind every 5 successful hangs with visual effect
-    if (this.successfulHangs % 5 === 0) {
-      this.updateWind()
+    // Update wind with visual effect
+    if (this.successfulHangs % 3 === 0) {
       this.showWindGust()
     }
 
@@ -1449,6 +1504,109 @@ class GameScene extends Phaser.Scene {
 
     // Check achievements
     this.checkAchievements()
+  }
+
+  levelUp() {
+    // Clear the washing line!
+    this.hangedItems.forEach((item, index) => {
+      if (item && item.scene) {
+        // Animate items flying away
+        this.tweens.add({
+          targets: item,
+          y: -100,
+          x: item.x + Phaser.Math.Between(-50, 50),
+          rotation: Math.PI * 2,
+          alpha: 0,
+          duration: 800,
+          delay: index * 100,
+          ease: 'Cubic.easeIn',
+          onComplete: () => {
+            if (item && item.scene) item.destroy()
+          }
+        })
+      }
+    })
+
+    // Level up!
+    this.level++
+    this.itemsOnLine = 0
+    this.hangedItems = []
+
+    // Update UI
+    this.levelText.setText(`LEVEL ${this.level}`)
+    this.levelText.setColor(Phaser.Display.Color.GetColor(
+      Phaser.Math.Between(100, 255),
+      Phaser.Math.Between(100, 255),
+      Phaser.Math.Between(100, 255)
+    ))
+    this.itemsOnLineText.setText(`0/${this.maxItemsPerLevel} on line`)
+
+    // BIG LEVEL UP CELEBRATION!
+    const levelUpText = this.add.text(180, 370, `LEVEL ${this.level}!`, {
+      fontSize: '64px',
+      fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
+      color: '#FFD700',
+      stroke: '#FF0000',
+      strokeThickness: 8
+    }).setOrigin(0.5).setAlpha(0).setScale(0.5).setDepth(20)
+
+    const subText = this.add.text(180, 430, 'WIND GETTING STRONGER!', {
+      fontSize: '24px',
+      fontFamily: 'Arial Rounded MT Bold, Arial, Helvetica, sans-serif',
+      color: '#FFFFFF',
+      stroke: '#000000',
+      strokeThickness: 4
+    }).setOrigin(0.5).setAlpha(0).setDepth(20)
+
+    // Animate level up text
+    this.tweens.add({
+      targets: levelUpText,
+      alpha: 1,
+      scale: 1.2,
+      duration: 500,
+      ease: 'Back.easeOut',
+      onComplete: () => {
+        this.tweens.add({
+          targets: levelUpText,
+          scale: 1,
+          duration: 200
+        })
+
+        // Show subtitle
+        this.tweens.add({
+          targets: subText,
+          alpha: 1,
+          duration: 300,
+          onComplete: () => {
+            // Fade out after 2 seconds
+            this.time.delayedCall(2000, () => {
+              this.tweens.add({
+                targets: [levelUpText, subText],
+                alpha: 0,
+                duration: 500,
+                onComplete: () => {
+                  levelUpText.destroy()
+                  subText.destroy()
+                }
+              })
+            })
+          }
+        })
+      }
+    })
+
+    // Epic effects
+    this.cameras.main.flash(600, 255, 255, 0)
+    this.cameras.main.shake(400, 0.01)
+
+    // Fireworks!
+    for (let i = 0; i < 30; i++) {
+      this.time.delayedCall(i * 50, () => {
+        const x = Phaser.Math.Between(50, 310)
+        const y = Phaser.Math.Between(200, 400)
+        this.createSuccessParticles(x, y)
+      })
+    }
   }
 
   showStars(x, y, count) {
